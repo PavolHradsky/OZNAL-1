@@ -16,8 +16,38 @@ sapply(data, function(x) sum(is.na(x)))
 column_types_count <- table(sapply(data, class))
 column_types_count
 
+
+
 complete_cases_count <- sum(complete.cases(data))
 table(complete.cases(data))
+
+# check for missing values in column price
+missing_values_price <- sum(is.na(data$price))
+missing_values_price
+
+# plot me distiribution of missing values in each column
+missing_values <- sapply(data, function(x) sum(is.na(x)))
+missing_values <- data.frame(column = names(missing_values), missing_values = missing_values)
+ggplot(missing_values, aes(x = column, y = missing_values)) +
+  geom_col() +
+  labs(title = "Missing Values in Columns", x = "Column", y = "Missing Values")
+
+
+
+# print the rows wehere price is 0 and count it
+data %>% filter(price == 0)
+zero_price_count <- nrow(data %>% filter(price == 0))
+zero_price_count
+# we can remowe rows where price is 0, because it is not possible to rent a room for free
+data <- data %>% filter(price != 0)
+
+zero_availability_count <- nrow(data %>% filter(availability_365 == 0))
+zero_availability_count
+
+
+
+
+
 
 ggplot(data, aes(x = price)) +
   geom_histogram(binwidth = 10, fill = "blue", color = "black") +
@@ -26,6 +56,8 @@ ggplot(data, aes(x = price)) +
 ggplot(data, aes(x = neighbourhood_group, y = price, fill = neighbourhood_group)) +
   geom_boxplot() +
   labs(title = "Price Distribution by Neighbourhood Group", x = "Neighbourhood Group", y = "Price")
+
+
 
 # just all columns
 lm_model <- lm(price ~ minimum_nights + number_of_reviews + reviews_per_month + calculated_host_listings_count + availability_365, data = data)
