@@ -2,9 +2,9 @@ library(tidyverse)
 library(magrittr)
 library(ggplot2)
 getwd() 
-#setwd("") #set working directory
+setwd("projekt1") #set working directory
 
-data <- read.csv("AB_NYC_2019.csv", header = TRUE, sep = ",")
+data <- read_csv("AB_NYC_2019.csv", col_names = TRUE)
 
 # to view data
 View(data)
@@ -30,6 +30,35 @@ missing_values_price <- sum(is.na(data$price))
 missing_values_price
 # there is no missing values in column price
 
+data %>%
+  count(room_type) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=room_type, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
+
+data %>%
+  count(neighbourhood_group) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=neighbourhood_group, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
+
+data %>%
+  count(availability_365) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=availability_365, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
+
+data %>%
+  filter(availability_365 != 0) %>%
+  count(availability_365) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=availability_365, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
+
 
 # these rows will be dropped where price is 0, because it is not possible to rent a room for free
 data %>%
@@ -45,7 +74,8 @@ data <- data %>% filter(price != 0)
 # in dataset there are no rows with price 0 and also with price less than 10
 nrow(data %>% filter(price < 10))
 
-# Count empty strings for each column
+
+# Count empty strings for each column (there are no empty strings)
 data %>%
   summarise_all(~sum(str_detect(., "^\\s*$")))
 
@@ -56,7 +86,7 @@ missing_values_reviews_per_month
 missing_values_last_review <- sum(is.na(data$last_review))
 missing_values_last_review
 
-#What to clean? can we omit som much missing values????
+#What to clean? can we omit so much missing values????
 
 
 
@@ -95,8 +125,6 @@ ggplot(combined_missing_values, aes(x = column, y = missing_values, fill = type)
        x = "Column", y = "Count of Missing and Empty Values") +
   scale_fill_manual(values = c("NA" = "blue", "Empty String" = "red")) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-
 
 
 
@@ -194,73 +222,6 @@ pairs(data[, c("price", "minimum_nights", "number_of_reviews", "reviews_per_mont
 
 
 
-# dataset z minula 
-
-
-# count classifier values in column transmission
-data %>% count(transmission)
-# remove rows where transmission is not automatic or manual and count how many rows were affected
-data_filtered <- data %>% filter(transmission %in% c("automatic", "manual"))
-# Count how many rows were affected
-rows_affected <- nrow(data) - nrow(data_filtered)
-rows_affected
-
-
-data %>% group_by(year) %>% summarise(count = n()) %>% ggplot(aes(x = year, y = count)) + geom_col()
-data_filtered %>% group_by(year) %>% summarise(count = n()) %>% ggplot(aes(x = year, y = count)) + geom_col()
-
-
-data_filtered %>% group_by(state) %>% summarise(avg_price = mean(sellingprice)) %>% ggplot(aes(x = state, y = avg_price)) + geom_col()
-data %>% group_by(state) %>% summarise(avg_price = mean(sellingprice)) %>% ggplot(aes(x = state, y = avg_price)) + geom_col()
-
-# wait for generation little bit, influence of year on selling price
-ggplot(data, aes(x = year, y = sellingprice)) +
-  geom_point() +
-  labs(x = "Year of production", y = "Selling Price", title = "Linear relation between year and selling price") +
-  theme_minimal()
-
-
-# influence of odometer on selling price
-ggplot(data, aes(x = odometer, y = sellingprice)) +
-  geom_point() +
-  labs(x = "Odometer", y = "Selling Price") +
-  theme_minimal()
-
-
-# check if duplicates are in column vin and how many of them, so we are looking for cars wich were not reselled
-unique_record_not_reselled <- data %>% distinct(vin, .keep_all = TRUE)
-duplicates_count <-  nrow(data) - nrow(unique_record_not_reselled)
-duplicates_count
-unique_record_not_reselled <- data %>% distinct(vin, .keep_all = TRUE)
-unique_record_not_reselled
-
-
-# find the most expensive car 
-most_expensive_car <- data %>%
-  filter(!is.na(sellingprice)) %>%
-  filter(sellingprice == max(sellingprice))
-most_expensive_car
-
-# find the cheapest car
-cheapest_car <- data %>%
-  filter(!is.na(sellingprice)) %>%
-  filter(sellingprice == min(sellingprice))
-cheapest_car
-
-# count average selling price 
-average_selling_price <- mean(data$sellingprice, na.rm = TRUE)
-average_selling_price
-
-# most common color 
-data$color <- trimws(data$color)
-
-# Count occurrences of each color
-color_counts <- table(data$color)
-color_counts
-
-most_common_color <- names(color_counts)[which.max(color_counts)]
-most_common_color
-
 #-----Helper functions-----
 panel.cor <- function(x,y, digits=2, prefix="", cex.cor){
   usr <- par("usr")
@@ -291,15 +252,10 @@ panel.lm <- function(x,y,col = par("col"), bg = NA, pch = par("pch"),
   abline(stats::lm(x ~ y), col = "steelblue", ...)
 } 
 
-#make pair plot, not working yet
-
-pairs(data[,c("year", "sellingprice", "odometer")], lower.panel = panel.smooth, upper.panel = NULL, diag.panel = panel.hist)
-
-# log transformation
-print(head(data["sellingprice"]))
-data$sellingprice <- log(data$sellingprice)
-cat("\nLog-transformed wages:\n")
-print(head(data["sellingprice"]))
-
-
-
+#-----Pair plot-----
+data %$%
+  pairs( ~ price + minimum_nights + number_of_reviews + reviews_per_month +
+           calculated_host_listings_count + availability_365, # Omit skill_moves from plotting       
+         upper.panel= NULL, 
+         diag.panel=panel.hist,
+         lower.panel=panel.smooth)
