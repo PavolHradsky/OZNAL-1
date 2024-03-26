@@ -6,13 +6,15 @@ getwd()
 
 data <- read.csv("AB_NYC_2019.csv", header = TRUE, sep = ",")
 
-
+# to view data
 View(data)
 str(data)
 head(data)
 dim(data)
 sapply(data, class)
 sapply(data, function(x) sum(is.na(x)))
+
+# class type distribution
 column_types_count <- table(sapply(data, class))
 column_types_count
 
@@ -21,31 +23,85 @@ column_types_count
 complete_cases_count <- sum(complete.cases(data))
 table(complete.cases(data))
 
+# We are going to check prices because it is the most important column for us, prediction will be done on this value
+
 # check for missing values in column price
 missing_values_price <- sum(is.na(data$price))
 missing_values_price
+# there is no missing values in column price
 
-# plot me distiribution of missing values in each column
+
+# these rows will be dropped where price is 0, because it is not possible to rent a room for free
+data %>%
+  filter(price == 0) %>%
+  select(price, host_name, neighbourhood_group, room_type)
+
+zero_price_count <- nrow(data %>% filter(price == 0))
+zero_price_count
+
+# we can remove rows 
+data <- data %>% filter(price != 0)
+
+# in dataset there are no rows with price 0 and also with price less than 10
+nrow(data %>% filter(price < 10))
+
+# Count empty strings for each column
+data %>%
+  summarise_all(~sum(str_detect(., "^\\s*$")))
+
+missing_values_reviews_per_month <- sum(is.na(data$reviews_per_month))
+missing_values_reviews_per_month
+
+
+missing_values_last_review <- sum(is.na(data$last_review))
+missing_values_last_review
+
+#What to clean? can we omit som much missing values????
+
+
+
+
+# plot of distiribution of missing values in each column
 missing_values <- sapply(data, function(x) sum(is.na(x)))
 missing_values <- data.frame(column = names(missing_values), missing_values = missing_values)
 ggplot(missing_values, aes(x = column, y = missing_values)) +
   geom_col() +
-  labs(title = "Missing Values in Columns", x = "Column", y = "Missing Values")
+  labs(title = "Distribúcia chýbajúcich hodnôt pre jednotlivé stĺpce datasetu", x = "Column", y = "Missing Values")
+
+# plot of distiribution of missing values in each column
+missing_values <- sapply(data, function(x) sum(str_detect(x, "^\\s*$")))
+missing_values <- data.frame(column = names(missing_values), missing_values = missing_values)
+ggplot(missing_values, aes(x = column, y = missing_values)) +
+  geom_col() +
+  labs(title = "Distribúcia chýbajúcich hodnôt pre jednotlivé stĺpce datasetu", x = "Column", y = "Missing Values")
+
+
+missing_values_na <- sapply(data, function(x) sum(is.na(x)))
+missing_values_na <- data.frame(column = names(missing_values_na), missing_values = missing_values_na)
+missing_values_na$type <- "NA"
+
+# Count empty strings for each column
+missing_values_empty <- sapply(data, function(x) sum(str_detect(x, "^\\s*$")))
+missing_values_empty <- data.frame(column = names(missing_values_empty), missing_values = missing_values_empty)
+missing_values_empty$type <- "Empty String"
+
+# Combine the two datasets
+combined_missing_values <- rbind(missing_values_na, missing_values_empty)
+
+# Plotting
+ggplot(combined_missing_values, aes(x = column, y = missing_values, fill = type)) +
+  geom_col(position = "dodge") +
+  labs(title = "Distribution of Missing and Empty Values for Each Dataset Column",
+       x = "Column", y = "Count of Missing and Empty Values") +
+  scale_fill_manual(values = c("NA" = "blue", "Empty String" = "red")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
 
-# print the rows wehere price is 0 and count it
-data %>% filter(price == 0)
-zero_price_count <- nrow(data %>% filter(price == 0))
-zero_price_count
-# we can remowe rows where price is 0, because it is not possible to rent a room for free
-data <- data %>% filter(price != 0)
+
 
 zero_availability_count <- nrow(data %>% filter(availability_365 == 0))
 zero_availability_count
-
-
-
 
 
 
@@ -59,7 +115,7 @@ ggplot(data, aes(x = neighbourhood_group, y = price, fill = neighbourhood_group)
 
 
 
-# just all columns
+# just all columns, linear model
 lm_model <- lm(price ~ minimum_nights + number_of_reviews + reviews_per_month + calculated_host_listings_count + availability_365, data = data)
 summary(lm_model)
 
@@ -77,6 +133,7 @@ data %>%
             max_price = max(price),
             number_of_records = n())
 
+# mean price of housing for each neighbourhood group
 data %>%
   select(host_name, last_review, neighbourhood_group, price) %>%
   group_by(neighbourhood_group) %>%
@@ -90,6 +147,8 @@ data %>%
 
 
 
+# pokus o pair plot, opravit
+# pair plot
 
 #-----Helper functions-----
 panel.cor <- function(x,y, digits=2, prefix="", cex.cor){
@@ -135,6 +194,7 @@ pairs(data[, c("price", "minimum_nights", "number_of_reviews", "reviews_per_mont
 
 
 
+# dataset z minula 
 
 
 # count classifier values in column transmission
