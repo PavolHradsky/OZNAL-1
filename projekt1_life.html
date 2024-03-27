@@ -504,14 +504,14 @@ display: none;
 ##                              34                              34 
 ## Income composition of resources                       Schooling 
 ##                             167                             163</code></pre>
-<p>Dáta obsahuju 21 stĺpcov a 2864 záznamov o kvalite a dlzke zivota v
+<p>Dáta obsahuju 22 stĺpcov a 2938 záznamov o kvalite a dlzke zivota v
 193 krajinach napriec rokmi 2000-2015.</p>
 <pre class="r"><code>column_types_count &lt;- table(sapply(data, class))
 column_types_count</code></pre>
 <pre><code>## 
 ## character   numeric 
 ##         2        20</code></pre>
-<p>19 stĺpcov je numerických a 2 kategoricke. Niektoré stĺpce obsahujú
+<p>20 stĺpcov je numerických a 2 kategoricke. Niektoré stĺpce obsahujú
 aj NA hodnoty.</p>
 <pre class="r"><code># We are going to check Life expectancy because it is the most important column for us, prediction will be done on this value
 
@@ -520,9 +520,9 @@ missing_values_life_axpextancy &lt;- sum(is.na(data$`Life expectancy`))
 missing_values_life_axpextancy</code></pre>
 <pre><code>## [1] 10</code></pre>
 <pre class="r"><code># there is 10 missing values in column price</code></pre>
-<p>Vidíme, že v stĺpci Life expectancy sa nachádza 10 prazdnych hodnot.
-Tento stĺpec bude pre nás dôležitý pri lineárnej regresii, kde budeme
-predikovať práve dlzku zivota na základe iných parametrov.</p>
+<p>Vidíme, že v stĺpci Life expectancy sa nachádza len 10 prázdnych
+hodnôt. Tento stĺpec bude pre nás dôležitý pri lineárnej regresii, kde
+budeme predikovať práve dlzku zivota na základe iných parametrov.</p>
 </div>
 <div id="histogramy" class="section level1">
 <h1>Histogramy</h1>
