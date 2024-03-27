@@ -2,7 +2,7 @@ library(tidyverse)
 library(magrittr)
 library(ggplot2)
 getwd() 
-setwd("projekt1") #set working directory
+#setwd("projekt1") #set working directory
 
 data <- read_csv("Life Expectancy Data.csv", col_names = TRUE)
 
@@ -19,7 +19,6 @@ column_types_count <- table(sapply(data, class))
 column_types_count
 
 
-
 complete_cases_count <- sum(complete.cases(data))
 table(complete.cases(data))
 
@@ -29,6 +28,14 @@ table(complete.cases(data))
 missing_values_life_axpextancy <- sum(is.na(data$`Life expectancy`))
 missing_values_life_axpextancy
 # there is 10 missing values in column price
+# check also for empty strings
+missing_values_life_axpextancy <- sum(str_detect(data$`Life expectancy`, "^\\s*$"))
+missing_values_life_axpextancy
+
+# drop rows with missing values in column Life expectancy
+data <- data %>% drop_na(`Life expectancy`)
+missing_values_life_axpextancy <- sum(is.na(data$`Life expectancy`))
+missing_values_life_axpextancy
 
 data %>%
   count(Status) %>%

@@ -10,18 +10,19 @@ library(tidyverse)
 library(magrittr)
 library(ggplot2)
 getwd() 
-setwd("C:/Users/hrads/Documents/Programming/Ing/2Semester/OZNAL/projekt1") #set working directory
+#setwd("C:/Users/hrads/Documents/Programming/Ing/2Semester/OZNAL/projekt1") #set working directory
 ```
 
 ## Bc. Peter Slovák, Bc. Pavol Hradský
 
+# Načítanie dát, neupravené 
 
 ```{r load}
 data <- read_csv("Life Expectancy Data.csv", col_names = TRUE)
 data
 ```
 
-Čo je v našich dátach?
+# Čo je v našich dátach?
 
 ```{r}
 str(data)
@@ -31,14 +32,19 @@ sapply(data, class)
 sapply(data, function(x) sum(is.na(x)))
 ```
 
-Dáta obsahuju 22 stĺpcov a 2938 záznamov o kvalite a dlzke zivota v 193 krajinach napriec rokmi 2000-2015. 
+Dáta obsahujú 22 stĺpcov a 2938 záznamov o kvalite a dĺžke života v 193 krajinach naprieč rokmi 2000-2015. 
+
 
 ```{r}
 column_types_count <- table(sapply(data, class))
 column_types_count
 ```
 
-20 stĺpcov je numerických a 2 kategoricke. Niektoré stĺpce obsahujú aj NA hodnoty.
+20 stĺpcov je numerických a 2 kategorické. Niektoré stĺpce obsahujú aj NA hodnoty.
+
+Kategorické stĺpce: Country, Status.
+
+Numerické stĺpce: Year, Life expectancy, Adult Mortality, infant deaths, Alcohol, percentage expenditure, Hepatitis B, Measles, BMI, under-five deaths, Polio, Total expenditure, Diphtheria, HIV/AIDS, GDP, Population, thinness 1-19 years, thinness 5-9 years, Income composition of resources, Schooling.
 
 ```{r}
 # We are going to check Life expectancy because it is the most important column for us, prediction will be done on this value
@@ -47,13 +53,41 @@ column_types_count
 missing_values_life_axpextancy <- sum(is.na(data$`Life expectancy`))
 missing_values_life_axpextancy
 # there is 10 missing values in column price
+
+# check also for empty strings
+empty_values_life_axpextancy <- sum(str_detect(data$`Life expectancy`, "^\\s*$"))
+empty_values_life_axpextancy
 ```
 
-Vidíme, že v stĺpci Life expectancy sa nachádza len 10 prázdnych hodnôt. Tento stĺpec bude pre nás dôležitý pri lineárnej regresii, kde budeme predikovať práve dlzku zivota na základe iných parametrov.
+Vidíme, že v stĺpci Life expectancy sa nachádza len 10 prázdnych hodnôt - NA a žiaden prázdny reťazec. Tento stĺpec bude pre nás dôležitý pri lineárnej regresii, kde budeme predikovať práve dlzku zivota na základe iných parametrov. Rozhodli sme sa dropnúť riadky s chýbajúcimi hodnotami v tomto stĺpci.
+
+# Úprava datasetu o stĺpec Continent, pre možné budúce použitie
+
+```{r}
+
+install.packages("countrycode", repos="https://cloud.r-project.org/")
+library(countrycode)
+data$Continent <- countrycode(data$Country, "country.name", "continent")
+data
+
+
+```
+
+# Čistenie datasetu
+
+```{r}
+# drop rows with missing values in column Life expectancy
+data <- data %>% drop_na(`Life expectancy`)
+missing_values_life_axpextancy <- sum(is.na(data$`Life expectancy`))
+missing_values_life_axpextancy
+dim(data)
+```
+
 
 # Histogramy
 
-```{r, echo=F}
+```{r}
+
 data %>%
   count(Status) %>%
   rename(Count = n) %>%
@@ -83,9 +117,9 @@ data %>%
   scale_fill_viridis_c()
 ```
 
-Pri zobrazení histogramov vidíme, že v datasete je omnoho viac záznamov s rozvojových krajín ako z rozvinutých. Roky sú zastúpené rovnako, až na jeden rok, kde je trochu viac záznamov. Ďalej vidíme rozdelenie dĺžky života a adult mortality.
+Pri zobrazení histogramov vidíme, že v datasete je omnoho viac záznamov s rozvojových krajín ako z rozvinutých. Roky, v ktorých boli robené merania, sú zastúpené rovnomerne. Pred odstránením predchádzajúcich 10 riadkov pre chýbajúce záznamy v Life expectancy sme mali v jeden rok viac záznamov. Ďalej vidíme rozdelenie dĺžky života a adult mortality.
 
-# Chýbajúce hodnoty
+# Zvyšné chýbajúce hodnoty
 
 
 ```{r, echo=F}
@@ -110,7 +144,7 @@ ggplot(combined_missing_values, aes(x = column, y = missing_values, fill = type)
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-Kontrolovali sme aj chýbajúce hodnoty. Vidíme že pomerne dosť sa ich nachádza aj v stĺpcoch Population a hepatits B alebo GDB. V ostaných je len menej, alebo žiadne.
+Kontrolovali sme aj ostatné chýbajúce hodnoty. Vidíme, že pomerne dosť sa ich nachádza aj v stĺpcoch Population a hepatits B alebo GDB. V ostaných je len menej, alebo žiadne.
 
 ## Pairplot
 
@@ -155,4 +189,77 @@ pairs(~ `Life expectancy` + `Adult Mortality` + Alcohol  +
       lower.panel = panel.lm)
 ```
 
-Vybrali sme len stĺpce, ktoré najviac korelujú so stĺpcom Life expectancy, ktorý sa budeme snažiť predikovať.
+Vybrali sme len stĺpce, ktoré najviac korelujú so stĺpcom Life expectancy, ktorý sa budeme snažiť predikovať. 
+
+# Hypotézy
+Hypotézy, ktoré sa nám zdajú zaujímavé:
+1. percentage expenditure vs GDP nieco???
+2. Človek, ktorý ... sa dožíva dlhšieho veku. (niečo s alkoholom a choroby)
+3. Človek, ktorý žije v krajinách s vyšším GDP sa dožíva dlhšieho veku.
+4. človek, ktorý dlhšie študuje a je viac vzdelaný sa dožíva dlhšieho veku.
+
+Náš response variable bude "Life expectancy" a ostatné stĺpce budú prediktory.
+
+
+# Lineárna regresia - model
+
+```{r}
+# linear regression model
+model <- lm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
+              `percentage expenditure` + BMI + 
+              `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
+              `Income composition of resources` +
+              Schooling, data = data)
+summary(model)
+```
+TODO popisat model
+
+
+Ďalší možný zaujímavý model
+
+```{r}
+model <- lm(`Alcohol` ~ `Adult Mortality` + BMI + `HIV/AIDS` + GDP +
+              `Income composition of resources` +
+              Schooling, data = data)
+summary(model)
+```
+TODO popisat model
+
+# Rozdelenie dát na trénovacie a testovacie
+
+```{r}
+# train test split
+set.seed(123)
+train_index <- sample(1:nrow(data), 0.8*nrow(data))
+train_data <- data[train_index,]
+test_data <- data[-train_index,]
+train_data
+test_data
+
+```
+TODO popisat v akom pomere atd
+
+# SVM model
+
+```{r}
+install.packages("e1071", repos="https://cloud.r-project.org/")
+library(e1071)
+model <- svm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
+              `percentage expenditure` + BMI + 
+              `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
+              `Income composition of resources` +
+              Schooling, data = train_data)
+summary(model)
+
+predictions <- predict(model, test_data)
+predictions
+
+actual <- test_data$`Life expectancy`
+actual
+
+# confusion matrix
+#confusion_matrix <- table(actual, predictions)
+#confusion_matrix
+
+```
+TODO popisat model a metriky
