@@ -191,7 +191,10 @@ classifier = svm(formula = `Life expectancy` ~ .,
 summary(classifier)
 
 
-
+install.packages("countrycode")
+library(countrycode)
+data$Continent <- countrycode(data$Country, "country.name", "continent")
+data
 
 
 
