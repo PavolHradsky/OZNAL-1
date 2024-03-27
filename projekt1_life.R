@@ -135,3 +135,10 @@ pairs(~ `Life expectancy` + `Adult Mortality` + Alcohol  +
       diag.panel = panel.hist,
       lower.panel = panel.lm)
 
+# linear regression model
+model <- lm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
+              `percentage expenditure` + BMI + 
+              `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
+              `Income composition of resources` +
+              Schooling, data = data)
+summary(model)

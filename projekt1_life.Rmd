@@ -31,14 +31,14 @@ sapply(data, class)
 sapply(data, function(x) sum(is.na(x)))
 ```
 
-Dáta obsahuju 21 stĺpcov a 2864 záznamov o kvalite a dlzke zivota v 193 krajinach napriec rokmi 2000-2015. 
+Dáta obsahuju 22 stĺpcov a 2938 záznamov o kvalite a dlzke zivota v 193 krajinach napriec rokmi 2000-2015. 
 
 ```{r}
 column_types_count <- table(sapply(data, class))
 column_types_count
 ```
 
-19 stĺpcov je numerických a 2 kategoricke. Niektoré stĺpce obsahujú aj NA hodnoty.
+20 stĺpcov je numerických a 2 kategoricke. Niektoré stĺpce obsahujú aj NA hodnoty.
 
 ```{r}
 # We are going to check Life expectancy because it is the most important column for us, prediction will be done on this value
@@ -49,7 +49,7 @@ missing_values_life_axpextancy
 # there is 10 missing values in column price
 ```
 
-Vidíme, že v stĺpci Life expectancy sa nachádza 10 prazdnych hodnot. Tento stĺpec bude pre nás dôležitý pri lineárnej regresii, kde budeme predikovať práve dlzku zivota na základe iných parametrov.
+Vidíme, že v stĺpci Life expectancy sa nachádza len 10 prázdnych hodnôt. Tento stĺpec bude pre nás dôležitý pri lineárnej regresii, kde budeme predikovať práve dlzku zivota na základe iných parametrov.
 
 # Histogramy
 
