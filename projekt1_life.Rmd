@@ -1,0 +1,158 @@
+---
+title: "OZNAL projekt 1"
+author: "Peter Slovak, Pavol Hradsky"
+date: "2024-03-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(magrittr)
+library(ggplot2)
+getwd() 
+setwd("C:/Users/hrads/Documents/Programming/Ing/2Semester/OZNAL/projekt1") #set working directory
+```
+
+## Bc. Peter Slovák, Bc. Pavol Hradský
+
+
+```{r load}
+data <- read_csv("Life Expectancy Data.csv", col_names = TRUE)
+data
+```
+
+Čo je v našich dátach?
+
+```{r}
+str(data)
+head(data)
+dim(data)
+sapply(data, class)
+sapply(data, function(x) sum(is.na(x)))
+```
+
+Dáta obsahuju 21 stĺpcov a 2864 záznamov o kvalite a dlzke zivota v 193 krajinach napriec rokmi 2000-2015. 
+
+```{r}
+column_types_count <- table(sapply(data, class))
+column_types_count
+```
+
+19 stĺpcov je numerických a 2 kategoricke. Niektoré stĺpce obsahujú aj NA hodnoty.
+
+```{r}
+# We are going to check Life expectancy because it is the most important column for us, prediction will be done on this value
+
+# check for missing values in column Life expectancy
+missing_values_life_axpextancy <- sum(is.na(data$`Life expectancy`))
+missing_values_life_axpextancy
+# there is 10 missing values in column price
+```
+
+Vidíme, že v stĺpci Life expectancy sa nachádza 10 prazdnych hodnot. Tento stĺpec bude pre nás dôležitý pri lineárnej regresii, kde budeme predikovať práve dlzku zivota na základe iných parametrov.
+
+# Histogramy
+
+```{r, echo=F}
+data %>%
+  count(Status) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=Status, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
+
+data %>%
+  count(Year) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=Year, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
+
+data %>%
+  count(`Life expectancy`) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=`Life expectancy`, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
+
+data %>%
+  count(`Adult Mortality`) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=`Adult Mortality`, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
+```
+
+Pri zobrazení histogramov vidíme, že v datasete je omnoho viac záznamov s rozvojových krajín ako z rozvinutých. Roky sú zastúpené rovnako, až na jeden rok, kde je trochu viac záznamov. Ďalej vidíme rozdelenie dĺžky života a adult mortality.
+
+# Chýbajúce hodnoty
+
+
+```{r, echo=F}
+missing_values_na <- sapply(data, function(x) sum(is.na(x)))
+missing_values_na <- data.frame(column = names(missing_values_na), missing_values = missing_values_na)
+missing_values_na$type <- "NA"
+
+# Count empty strings for each column
+missing_values_empty <- sapply(data, function(x) sum(str_detect(x, "^\\s*$")))
+missing_values_empty <- data.frame(column = names(missing_values_empty), missing_values = missing_values_empty)
+missing_values_empty$type <- "Empty String"
+
+# Combine the two datasets
+combined_missing_values <- rbind(missing_values_na, missing_values_empty)
+
+# Plotting
+ggplot(combined_missing_values, aes(x = column, y = missing_values, fill = type)) +
+  geom_col(position = "dodge") +
+  labs(title = "Distribution of Missing and Empty Values for Each Dataset Column",
+       x = "Column", y = "Count of Missing and Empty Values") +
+  scale_fill_manual(values = c("NA" = "blue", "Empty String" = "red")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Kontrolovali sme aj chýbajúce hodnoty. Vidíme že pomerne dosť sa ich nachádza aj v stĺpcoch Population a hepatits B alebo GDB. V ostaných je len menej, alebo žiadne.
+
+## Pairplot
+
+```{r}
+#-----Helper functions-----
+panel.cor <- function(x,y, digits=2, prefix="", cex.cor){
+  usr <- par("usr")
+  on.exit(par(usr))
+  par(usr = c(0,1,0,1))
+  r <- abs(cor(x,y,use="complete.obs"))
+  txt <- format(c(r,0.123456789), digits = digits)[1]
+  txt <- paste0(prefix, txt,sep="")
+  if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+  text(0.5, 0.5, txt, cex = cex.cor * (1 + r) / 2)
+}
+
+panel.hist <- function(x, ...){
+  usr <- par("usr")
+  on.exit(par(usr))
+  par(usr = c(usr[1:2],0,1.5))
+  h <- hist(x, plot = FALSE)
+  breaks <- h$breaks
+  nB <- length(breaks)
+  y <- h$counts
+  y <- y/max(y)
+  rect(breaks[-nB], 0, breaks[-1], y, col="white",...)
+}
+
+panel.lm <- function(x, y, col = par("col"), bg = NA, pch = par("pch"),
+                     cex = 1, col.smooth = "blue", ...) {
+  points(x, y, pch = pch, col = col, bg = bg, cex = cex)
+  abline(stats::lm(x ~ y), col = "steelblue", ...)
+} 
+pairs(~ `Life expectancy` + `Adult Mortality` + Alcohol  +
+        `percentage expenditure` + BMI + 
+        `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
+        `Income composition of resources` +
+        Schooling, 
+      data = data,
+      upper.panel= NULL, 
+      diag.panel = panel.hist,
+      lower.panel = panel.lm)
+```
+
+Vybrali sme len stĺpce, ktoré najviac korelujú so stĺpcom Life expectancy, ktorý sa budeme snažiť predikovať.
