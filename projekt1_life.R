@@ -142,3 +142,57 @@ model <- lm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
               `Income composition of resources` +
               Schooling, data = data)
 summary(model)
+
+# generalized linear model - reapir it 
+model <- glm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
+              `percentage expenditure` + BMI + 
+              `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
+              `Income composition of resources` +
+              Schooling, data = data, family = binomial)
+summary(model)
+
+model <- lm(`Alcohol` ~ `Adult Mortality` + BMI + `HIV/AIDS` + GDP +
+              `Income composition of resources` +
+              Schooling, data = data)
+summary(model)
+
+# train test split
+set.seed(123)
+train_index <- sample(1:nrow(data), 0.8*nrow(data))
+train_data <- data[train_index,]
+test_data <- data[-train_index,]
+train_data
+test_data
+
+# svm model
+install.packages("e1071")
+library(e1071)
+model <- svm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
+              `percentage expenditure` + BMI + 
+              `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
+              `Income composition of resources` +
+              Schooling, data = train_data)
+summary(model)
+
+predictions <- predict(model, test_data)
+predictions
+
+actual <- test_data$`Life expectancy`
+actual
+
+# confusion matrix
+confusion_matrix <- table(actual, predictions)
+confusion_matrix
+
+classifier = svm(formula = `Life expectancy` ~ ., 
+                 data = train_data, 
+                 type = 'C-classification', 
+                 kernel = 'linear') 
+summary(classifier)
+
+
+
+
+
+
+
