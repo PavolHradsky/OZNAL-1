@@ -191,18 +191,27 @@ actual
 confusion_matrix <- table(actual, predictions)
 confusion_matrix
 
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+accuracy
+
+
+
 classifier = svm(formula = `Life expectancy` ~ ., 
                  data = train_data, 
                  type = 'C-classification', 
                  kernel = 'linear') 
 summary(classifier)
 
+svm_model <- svm(`Life expectancy` ~ ., data = train_data, kernel = "radial")
+svm_model
+
+svm_pred <- predict(svm_model, test_data)
+
+
 
 install.packages("countrycode")
 library(countrycode)
 data$Continent <- countrycode(data$Country, "country.name", "continent")
 data
-
-
 
 
