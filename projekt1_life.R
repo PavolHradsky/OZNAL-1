@@ -1,8 +1,10 @@
 library(tidyverse)
 library(magrittr)
 library(ggplot2)
+library(caret)
+library(ROCit)
 getwd() 
-#setwd("projekt1") #set working directory
+# setwd("projekt1") #set working directory
 
 data <- read_csv("Life Expectancy Data.csv", col_names = TRUE)
 
@@ -67,21 +69,6 @@ data %>%
 
 
 
-# plot of distiribution of missing values in each column
-missing_values <- sapply(data, function(x) sum(is.na(x)))
-missing_values <- data.frame(column = names(missing_values), missing_values = missing_values)
-ggplot(missing_values, aes(x = column, y = missing_values)) +
-  geom_col() +
-  labs(title = "Distribúcia chýbajúcich hodnôt pre jednotlivé stĺpce datasetu", x = "Column", y = "Missing Values")
-
-# plot of distiribution of missing values in each column
-missing_values <- sapply(data, function(x) sum(str_detect(x, "^\\s*$")))
-missing_values <- data.frame(column = names(missing_values), missing_values = missing_values)
-ggplot(missing_values, aes(x = column, y = missing_values)) +
-  geom_col() +
-  labs(title = "Distribúcia chýbajúcich hodnôt pre jednotlivé stĺpce datasetu", x = "Column", y = "Missing Values")
-
-
 missing_values_na <- sapply(data, function(x) sum(is.na(x)))
 missing_values_na <- data.frame(column = names(missing_values_na), missing_values = missing_values_na)
 missing_values_na$type <- "NA"
@@ -142,26 +129,12 @@ pairs(~ `Life expectancy` + `Adult Mortality` + Alcohol  +
       diag.panel = panel.hist,
       lower.panel = panel.lm)
 
-# linear regression model
-model <- lm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
-              `percentage expenditure` + BMI + 
-              `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
-              `Income composition of resources` +
-              Schooling, data = data)
-summary(model)
+#one hot encode status
+data
+data %<>% 
+  mutate(status_oh = if_else(Status=='Developed', 1, 0)) %>%
+  relocate(status_oh)
 
-# generalized linear model - reapir it 
-model <- glm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
-              `percentage expenditure` + BMI + 
-              `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
-              `Income composition of resources` +
-              Schooling, data = data, family = binomial)
-summary(model)
-
-model <- lm(`Alcohol` ~ `Adult Mortality` + BMI + `HIV/AIDS` + GDP +
-              `Income composition of resources` +
-              Schooling, data = data)
-summary(model)
 
 # train test split
 set.seed(123)
@@ -171,10 +144,47 @@ test_data <- data[-train_index,]
 train_data
 test_data
 
-# svm model
-install.packages("e1071")
-library(e1071)
-model <- svm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
+                # Vidime, ze aj po random splite je status primerane rozdeleny
+train_data %>%
+  count(Status) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=Status, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
+
+test_data %>%
+  count(Status) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=Status, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
+
+                # Drop na rows for used colums, to prevent removing during prediction
+test_data %<>% 
+  select(status_oh, `Life expectancy`, `Adult Mortality`, Alcohol, 
+         `percentage expenditure`, BMI, `Total expenditure`, 
+         Diphtheria, `HIV/AIDS`, GDP, `Income composition of resources`, 
+         Schooling) %>%
+  drop_na()
+
+# regression
+model = lm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
+             `percentage expenditure` + BMI + 
+             `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
+             `Income composition of resources` +
+             Schooling, data = train_data)
+summary(model)
+
+residuals <- model$residuals
+RSS <- sum((residuals-mean(residuals))^2)
+RSS
+
+RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/length(test_data$`Life expectancy`)))
+RMSE
+
+
+# classification
+model = glm(status_oh ~ `Life expectancy` + `Adult Mortality` + Alcohol  +
               `percentage expenditure` + BMI + 
               `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
               `Income composition of resources` +
@@ -182,36 +192,22 @@ model <- svm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
 summary(model)
 
 predictions <- predict(model, test_data)
+as.vector(predictions)
+
+actual <- test_data$status_oh
+as.vector(actual)
+
+roc = rocit(predictions, actual)
+plot(roc)
+cutoff_index <- which.max(roc$TPR + (1 - roc$FPR) - 1)
+optimal_cutoff <- roc$Cutoff[cutoff_index]
+optimal_cutoff
+
 predictions
+predicted_class <- ifelse(predictions >= optimal_cutoff, 1, 0)
+predicted_class
 
-actual <- test_data$`Life expectancy`
-actual
+caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive = "1")
 
-# confusion matrix
-confusion_matrix <- table(actual, predictions)
-confusion_matrix
-
-accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
-accuracy
-
-
-
-classifier = svm(formula = `Life expectancy` ~ ., 
-                 data = train_data, 
-                 type = 'C-classification', 
-                 kernel = 'linear') 
-summary(classifier)
-
-svm_model <- svm(`Life expectancy` ~ ., data = train_data, kernel = "radial")
-svm_model
-
-svm_pred <- predict(svm_model, test_data)
-
-
-
-install.packages("countrycode")
-library(countrycode)
-data$Continent <- countrycode(data$Country, "country.name", "continent")
-data
 
 
