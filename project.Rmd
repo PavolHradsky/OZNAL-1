@@ -1,0 +1,208 @@
+---
+title: "OZNAL projekt 1"
+author: "Peter Slovak, Pavol Hradsky"
+date: "2024-03-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(magrittr)
+library(ggplot2)
+getwd() 
+setwd("C:/Users/hrads/Documents/Programming/Ing/2Semester/OZNAL/projekt1") #set working directory
+```
+
+## Bc. Peter Slovák, Bc. Pavol Hradský
+
+
+```{r load}
+data <- read_csv("AB_NYC_2019.csv", col_names = TRUE)
+data
+```
+Čo je v našich dátach?
+```{r}
+str(data)
+head(data)
+dim(data)
+sapply(data, class)
+sapply(data, function(x) sum(is.na(x)))
+```
+Dáta obsahuju 16 stĺpcov a 48000 záznamov o AirBNB ubytovaniach v NewYorku. 
+
+```{r}
+column_types_count <- table(sapply(data, class))
+column_types_count
+```
+
+10 stĺpcov je numerických, 5 kategorických a 1 obsahuje dátumy. Niektoré stĺpce obsahujú aj NA hodnoty.
+
+```{r}
+# We are going to check prices because it is the most important column for us, prediction will be done on this value
+
+# check for missing values in column price
+missing_values_price <- sum(is.na(data$price))
+missing_values_price
+# there is no missing values in column price
+```
+Vidíme, že v stĺpci prices sa nenachádzajú žiadne prázdne hodnoty. Tento stĺpec bude pre nás dôležitý pri lineárnej regresii, kde budeme predikovať práve cenu apartmánu na základe iných parametrov.
+
+# Histogramy
+
+```{r, echo=F}
+data %>%
+  count(room_type) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=room_type, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
+
+data %>%
+  count(neighbourhood_group) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=neighbourhood_group, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
+
+data %>%
+  count(availability_365) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=availability_365, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
+
+data %>%
+  filter(availability_365 != 0) %>%
+  count(availability_365) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=availability_365, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
+```
+Pri zobrazení histogramov vidíme, že napr. typ izby: celý apartmán je približne rovnako zastúpený ako typ privátna izba. Existuje ale aj malé mnoťstvo ponúk na zdieľanú izbu. Ďalej vidíme počet ponúk v rôznych častiach mesta NY. Keď sme si chceli zobraziť histogram pre počet dní, kedy je apartmán dostupný v roku, zistili sme že veľké množstvo apartmánov nie sú dostupných ani jeden deň v roku. (sú to pravdepodobne nejaké archivované ponuky a podobne). Preto sme si zobrazili aj rozdelenie bez availability=0.
+
+# Chýbajúce hodnoty
+
+```{r}
+# these rows will be dropped where price is 0, because it is not possible to rent a room for free
+data %>%
+  filter(price == 0) %>%
+  select(price, host_name, neighbourhood_group, room_type)
+
+zero_price_count <- nrow(data %>% filter(price == 0))
+zero_price_count
+
+# we can remove rows 
+data <- data %>% filter(price != 0)
+
+# in dataset there are no rows with price 0 and also with price less than 10
+nrow(data %>% filter(price < 10))
+```
+
+Zistili sme, že v datasete je niekoľko ponúk s nulovou cenou. To v realite nezodpovedá prirodzeným dátam, (keďže nemá zmysel ponúkať apartmány zadarmo, a môže to zmiasť náš model), preto sme sa rozhodli tieto záznamy dropnúť.
+
+```{r}
+# Count empty strings for each column (there are no empty strings)
+data %>%
+  summarise_all(~sum(str_detect(., "^\\s*$")))
+
+missing_values_reviews_per_month <- sum(is.na(data$reviews_per_month))
+missing_values_reviews_per_month
+
+
+missing_values_last_review <- sum(is.na(data$last_review))
+missing_values_last_review
+```
+
+Kontrolovali sme aj prázdne texty, ale žiadne sme nenašli.
+
+```{r, echo=F}
+# plot of distiribution of missing values in each column
+missing_values <- sapply(data, function(x) sum(is.na(x)))
+missing_values <- data.frame(column = names(missing_values), missing_values = missing_values)
+ggplot(missing_values, aes(x = column, y = missing_values)) +
+  geom_col() +
+  labs(title = "Distribúcia chýbajúcich hodnôt pre jednotlivé stĺpce datasetu", x = "Column", y = "Missing Values")
+```
+
+Kontrolovali sme aj ďaľšie chýbajúce hodnoty. Vidíme že pomerne dosť sa ich nachádza aj v stĺpcoch last_reviewd a reviews_per_month. Sú to apartmány, ktoré zatiaľ neboli hodnotené. V niektorých zátnamoch nie je vyplnené meno vlastníka.
+
+# Rozdelenie cien
+
+```{r, echo=F}
+ggplot(data, aes(x = price)) +
+  geom_histogram(binwidth = 10, fill = "blue", color = "black") +
+  labs(title = "Price Distribution Histogram", x = "Price", y = "Frequency")
+
+ggplot(data, aes(x = neighbourhood_group, y = price, fill = neighbourhood_group)) +
+  geom_boxplot() +
+  labs(title = "Price Distribution by Neighbourhood Group", x = "Neighbourhood Group", y = "Price")
+```
+
+Vidíme, že dataset má v cenách pomerne veľa outlierov v horných hodnotách.
+
+```{r}
+data %>% 
+  select(host_name, last_review, neighbourhood_group, price) %>%
+  group_by(neighbourhood_group) %>% 
+  summarise(mean_price = mean(price),
+            min_price = min(price),
+            max_price = max(price),
+            number_of_records = n())
+
+# mean price of housing for each neighbourhood group
+data %>%
+  select(host_name, last_review, neighbourhood_group, price) %>%
+  group_by(neighbourhood_group) %>%
+  summarise(mean_price = mean(price),
+            min_price = min(price),
+            max_price = max(price),
+            number_of_records = n()) %>%
+  ggplot(aes(x = neighbourhood_group, y = mean_price)) +
+  geom_col() +
+  labs(title = "Mean Price by Neighbourhood Group", x = "Neighbourhood Group", y = "Mean Price")
+
+```
+Najdrahšie apartmány sa nachádzajú v časti Manhattan.
+
+## Pairplot
+
+```{r}
+#-----Helper functions-----
+panel.cor <- function(x,y, digits=2, prefix="", cex.cor){
+  usr <- par("usr")
+  on.exit(par(usr))
+  par(usr = c(0,1,0,1))
+  r <- abs(cor(x,y,use="complete.obs"))
+  txt <- format(c(r,0.123456789), digits = digits)[1]
+  txt <- paste0(prefix, txt,sep="")
+  if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+  text(0.5, 0.5, txt, cex = cex.cor * (1 + r) / 2)
+}
+
+panel.hist <- function(x, ...){
+  usr <- par("usr")
+  on.exit(par(usr))
+  par(usr = c(usr[1:2],0,1.5))
+  h <- hist(x, plot = FALSE)
+  breaks <- h$breaks
+  nB <- length(breaks)
+  y <- h$counts
+  y <- y/max(y)
+  rect(breaks[-nB], 0, breaks[-1], y, col="white",...)
+}
+
+panel.lm <- function(x,y,col = par("col"), bg = NA, pch = par("pch"),
+                     cex = 1, col.smooth = "blue",...){
+  points(x,y,pch=pch, col=col(alpha = 0.1), bg=bg, cex=cex)
+  abline(stats::lm(x ~ y), col = "steelblue", ...)
+} 
+
+#-----Pair plot-----
+data %$%
+  pairs( ~ price + minimum_nights + number_of_reviews + reviews_per_month +
+           calculated_host_listings_count + availability_365, # Omit skill_moves from plotting       
+         upper.panel= NULL, 
+         diag.panel=panel.hist,
+         lower.panel=panel.smooth)
+```

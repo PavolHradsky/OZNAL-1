@@ -213,6 +213,32 @@ model <- lm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
 summary(model)
 ```
 TODO popisat model
+Chceli by sme mat Median priblizne v strede medzi Max a Min hodnotou.
+Co priblizne sedi, median ma hodnotu -0.0527, Max ma hodnotu 21.9899 a Min ma hodnotu -21.1648. Nasa disribucia je symetricka.
+
+Z modelu vidime, ze Adult Mortality, HIV/AIDS a Alcohol maju negativny vplyv na Life expectancy. Naopak Total expenditure, BMI, Diphtheria, GDP, Income composition of resources a Schooling maju pozitivny vplyv na Life expectancy.
+Multiple R-squared:  0.8188 ,a hodnotu 82.84% co znamena, ze nase prediktory vysvetluju 82.84% variacie v Life expectancy.
+Hviezdičky pred hodnotami p-value znamenaju, ze su signifikantne.
+
+
+```{r}
+
+```{r}
+# Quantile-quantile plot 
+qqnorm(model$residuals)
+qqline(model$residuals)
+```
+
+```{r}
+# Residuals vs Fitted plot
+plot(model$residuals, model$fitted.values)
+```
+
+```{r}
+
+# Normality test for hypothesis?
+shapiro.test(model$residuals)
+```
 
 
 Ďalší možný zaujímavý model
@@ -224,6 +250,33 @@ model <- lm(`Alcohol` ~ `Adult Mortality` + BMI + `HIV/AIDS` + GDP +
 summary(model)
 ```
 TODO popisat model
+Median mame priblizne v strede medzi Max a Min hodnotou, co je dobre. Max hodnota je 10.9662a Min hodnota je -9.8691. Nas model je symetricky rozdeleny.
+Z modelu vidime, ze Adult Mortality, BMI, HIV/AIDS, GDP, Income composition of resources a Schooling maju pozitivny vplyv na Alcohol.
+Multiple R-squared:  0.3361 ,a hodnotu 33.61% co znamena, ze nase prediktory vysvetluju 33.61% variacie v Alcohol.
+Hviezdičky pred hodnotami p-value znamenaju, ze su signifikantne.
+
+
+```{r}
+
+```{r}
+# Quantile-quantile plot
+qqnorm(model$residuals)
+qqline(model$residuals)
+```
+
+```{r}
+# Residuals vs Fitted plot
+plot(model$residuals, model$fitted.values)
+```
+
+```{r}
+# Normality test for hypothesis?
+shapiro.test(model$residuals)
+
+```
+# TODO make smaller models
+
+
 
 # Rozdelenie dát na trénovacie a testovacie
 
@@ -237,7 +290,7 @@ train_data
 test_data
 
 ```
-TODO popisat v akom pomere atd
+TODO popisat v akom pomere a preco atd
 
 # SVM model
 
@@ -261,5 +314,30 @@ actual
 #confusion_matrix <- table(actual, predictions)
 #confusion_matrix
 
+# accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+# accuracy
+
 ```
 TODO popisat model a metriky
+
+```{r}
+install.packages("e1071", repos="https://cloud.r-project.org/")
+library(e1071)
+
+svm_model <- svm(`Life expectancy` ~ ., data = train_data, kernel = "radial")
+svm_model
+
+#svm_pred <- predict(svm_model, test_data)
+
+
+```
+
+
+```{r}
+
+install.packages("countrycode")
+library(countrycode)
+data$Continent <- countrycode(data$Country, "country.name", "continent")
+data
+
+```
