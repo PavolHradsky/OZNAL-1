@@ -129,6 +129,7 @@ pairs(~ `Life expectancy` + `Adult Mortality` + Alcohol  +
       diag.panel = panel.hist,
       lower.panel = panel.lm)
 
+
 #one hot encode status
 data
 data %<>% 
@@ -167,13 +168,19 @@ test_data %<>%
          Schooling) %>%
   drop_na()
 
-# regression
-model = lm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
-             `percentage expenditure` + BMI + 
-             `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
-             `Income composition of resources` +
-             Schooling, data = train_data)
+# Experiments:
+
+# Regression:
+
+# 1. percentage expenditure vs GDP nieco???
+model = lm(`percentage expenditure` ~ GDP, data = train_data)
 summary(model)
+qqnorm(model$residuals)
+qqline(model$residuals)
+
+plot(model$residuals, model$fitted.values)
+
+shapiro.test(model$residuals)
 
 residuals <- model$residuals
 RSS <- sum((residuals-mean(residuals))^2)
@@ -183,7 +190,106 @@ RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/l
 RMSE
 
 
-# classification
+# 2. Človek, ktorý ... sa dožíva dlhšieho veku. (niečo s alkoholom a choroby)
+model = lm(`Life expectancy` ~ `HIV/AIDS` + Alcohol, data = train_data)
+summary(model)
+qqnorm(model$residuals)
+qqline(model$residuals)
+
+plot(model$residuals, model$fitted.values)
+
+shapiro.test(model$residuals)
+
+residuals <- model$residuals
+RSS <- sum((residuals-mean(residuals))^2)
+RSS
+
+RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/length(test_data$`Life expectancy`)))
+RMSE
+
+# 3. Človek, ktorý žije v krajinách s vyšším GDP sa dožíva dlhšieho veku.
+model = lm(`Life expectancy` ~ GDP, data = train_data)
+summary(model)
+qqnorm(model$residuals)
+qqline(model$residuals)
+
+plot(model$residuals, model$fitted.values)
+
+shapiro.test(model$residuals)
+
+residuals <- model$residuals
+RSS <- sum((residuals-mean(residuals))^2)
+RSS
+
+RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/length(test_data$`Life expectancy`)))
+RMSE
+
+# 4. človek, ktorý dlhšie študuje a je viac vzdelaný sa dožíva dlhšieho veku.
+model = lm(`Life expectancy` ~ Schooling + Alcohol, data = train_data)
+summary(model)
+qqnorm(model$residuals)
+qqline(model$residuals)
+
+plot(model$residuals, model$fitted.values)
+
+shapiro.test(model$residuals)
+
+residuals <- model$residuals
+RSS <- sum((residuals-mean(residuals))^2)
+RSS
+
+RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/length(test_data$`Life expectancy`)))
+RMSE
+
+
+# All :)
+model = lm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
+             `percentage expenditure` + BMI + 
+             `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
+             `Income composition of resources` +
+             Schooling, data = train_data)
+summary(model)
+qqnorm(model$residuals)
+qqline(model$residuals)
+
+plot(model$residuals, model$fitted.values)
+
+shapiro.test(model$residuals)
+
+residuals <- model$residuals
+RSS <- sum((residuals-mean(residuals))^2)
+RSS
+
+RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/length(test_data$`Life expectancy`)))
+RMSE
+
+
+# Classification:
+
+# 1. GDP a Schooling suvisi s tym, ci je krajina rozvojova alebo rozvinuta
+model = glm(status_oh ~ GDP + Schooling, data = train_data)
+summary(model)
+
+predictions <- predict(model, test_data)
+as.vector(predictions)
+
+actual <- test_data$status_oh
+as.vector(actual)
+
+roc = rocit(predictions, actual)
+plot(roc)
+cutoff_index <- which.max(roc$TPR + (1 - roc$FPR) - 1)
+optimal_cutoff <- roc$Cutoff[cutoff_index]
+optimal_cutoff
+
+predictions
+predicted_class <- ifelse(predictions >= optimal_cutoff, 1, 0)
+predicted_class
+
+caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive = "1")
+
+
+# all :)
 model = glm(status_oh ~ `Life expectancy` + `Adult Mortality` + Alcohol  +
               `percentage expenditure` + BMI + 
               `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
