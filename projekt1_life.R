@@ -4,7 +4,7 @@ library(ggplot2)
 library(caret)
 library(ROCit)
 getwd() 
-# setwd("projekt1") #set working directory
+setwd("projekt1") #set working directory
 
 data <- read_csv("Life Expectancy Data.csv", col_names = TRUE)
 
@@ -179,6 +179,8 @@ qqnorm(model$residuals)
 qqline(model$residuals)
 
 plot(model$residuals, model$fitted.values)
+data %>% select(`percentage expenditure`, GDP) %>% drop_na() %>% plot(model$fitted.values)
+plot(model$fitted.values, train_data$`percentage expenditure`)
 
 shapiro.test(model$residuals)
 
@@ -269,11 +271,7 @@ RMSE
 # Classification:
 
 # 1. GDP a Schooling suvisi s tym, ci je krajina rozvojova alebo rozvinuta
-library(ROCit)
 model = glm(status_oh ~ GDP + Schooling, data = train_data)
-summary(model)
-
-model = glm(status_oh ~ GDP + Schooling, data = train_data, family = binomial(link=logit))
 summary(model)
 
 predictions <- predict(model, test_data)
