@@ -193,6 +193,8 @@ RMSE
 # 2. Človek, ktorý ... sa dožíva dlhšieho veku. (niečo s alkoholom a choroby)
 model = lm(`Life expectancy` ~ `HIV/AIDS` + Alcohol, data = train_data)
 summary(model)
+
+
 qqnorm(model$residuals)
 qqline(model$residuals)
 
@@ -267,7 +269,11 @@ RMSE
 # Classification:
 
 # 1. GDP a Schooling suvisi s tym, ci je krajina rozvojova alebo rozvinuta
+library(ROCit)
 model = glm(status_oh ~ GDP + Schooling, data = train_data)
+summary(model)
+
+model = glm(status_oh ~ GDP + Schooling, data = train_data, family = binomial(link=logit))
 summary(model)
 
 predictions <- predict(model, test_data)

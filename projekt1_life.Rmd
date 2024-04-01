@@ -6,6 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) # do not show warnings
 library(tidyverse)
 library(magrittr)
 library(ggplot2)
@@ -47,21 +48,22 @@ Kategorické stĺpce: Country, Status.
 Numerické stĺpce: Year, Life expectancy, Adult Mortality, infant deaths, Alcohol, percentage expenditure, Hepatitis B, Measles, BMI, under-five deaths, Polio, Total expenditure, Diphtheria, HIV/AIDS, GDP, Population, thinness 1-19 years, thinness 5-9 years, Income composition of resources, Schooling.
 
 ```{r}
-# We are going to check Life expectancy because it is the most important column for us, prediction will be done on this value
+# Ideme zistit, ci sa v stlpci Life expectancy nachadzaju nejake chybajuce hodnoty, alebo prazdne hodnoty pretoze to je stlpec, ktory budeme predikovat a je pre nas dolezity
 
-# check for missing values in column Life expectancy
+# kontrola pre chybajuce hodnoty v stlpci Life expectancy
 missing_values_life_axpextancy <- sum(is.na(data$`Life expectancy`))
 missing_values_life_axpextancy
-# there is 10 missing values in column price
+# zistili, ze v stlpci Life expectancy sa nachadza 10 chybajucich hodnot - NA
 
-# check also for empty strings
+
+# kontrola pre prazdne hodnoty
 empty_values_life_axpextancy <- sum(str_detect(data$`Life expectancy`, "^\\s*$"))
 empty_values_life_axpextancy
 ```
 
 Vidíme, že v stĺpci Life expectancy sa nachádza len 10 prázdnych hodnôt - NA a žiaden prázdny reťazec. Tento stĺpec bude pre nás dôležitý pri lineárnej regresii, kde budeme predikovať práve dlzku zivota na základe iných parametrov. Rozhodli sme sa dropnúť riadky s chýbajúcimi hodnotami v tomto stĺpci.
 
-# Úprava datasetu o stĺpec Continent, pre možné budúce použitie
+# Úprava datasetu o stĺpec Continent, pre možné budúce použitie. Vidíme, že najviac záznamov máme z Afriky, Ázie a Európy.
 
 ```{r}
 
@@ -70,13 +72,20 @@ library(countrycode)
 data$Continent <- countrycode(data$Country, "country.name", "continent")
 data
 
+# počet krajín v jednotlivých kontinentoch
+data %>%
+  count(Continent) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=Continent, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
 
 ```
 
 # Čistenie datasetu
 
 ```{r}
-# drop rows with missing values in column Life expectancy
+# odstránenie riadkov s chýbajúcimi hodnotami v stĺpci Life expectancy
 data <- data %>% drop_na(`Life expectancy`)
 missing_values_life_axpextancy <- sum(is.na(data$`Life expectancy`))
 missing_values_life_axpextancy
@@ -87,28 +96,28 @@ dim(data)
 # Histogramy
 
 ```{r}
-
+# Histogram rozvojových a rozvinutých krajín
 data %>%
   count(Status) %>%
   rename(Count = n) %>%
   ggplot(aes(x=Status, y=Count)) + 
   geom_histogram(stat="identity", aes(fill=Count)) + 
   scale_fill_viridis_c()
-
+# Histogram rokov, kedy boli robené merania
 data %>%
   count(Year) %>%
   rename(Count = n) %>%
   ggplot(aes(x=Year, y=Count)) + 
   geom_histogram(stat="identity", aes(fill=Count)) + 
   scale_fill_viridis_c()
-
+# Histogram dĺžky života
 data %>%
   count(`Life expectancy`) %>%
   rename(Count = n) %>%
   ggplot(aes(x=`Life expectancy`, y=Count)) + 
   geom_histogram(stat="identity", aes(fill=Count)) + 
   scale_fill_viridis_c()
-
+# Histogram adult mortality 
 data %>%
   count(`Adult Mortality`) %>%
   rename(Count = n) %>%
@@ -127,7 +136,7 @@ missing_values_na <- sapply(data, function(x) sum(is.na(x)))
 missing_values_na <- data.frame(column = names(missing_values_na), missing_values = missing_values_na)
 missing_values_na$type <- "NA"
 
-# Count empty strings for each column
+# spočítanie prázdnych hodnôt pre každý stĺpec
 missing_values_empty <- sapply(data, function(x) sum(str_detect(x, "^\\s*$")))
 missing_values_empty <- data.frame(column = names(missing_values_empty), missing_values = missing_values_empty)
 missing_values_empty$type <- "Empty String"
@@ -191,54 +200,280 @@ pairs(~ `Life expectancy` + `Adult Mortality` + Alcohol  +
 
 Vybrali sme len stĺpce, ktoré najviac korelujú so stĺpcom Life expectancy, ktorý sa budeme snažiť predikovať. 
 
-# Hypotézy
-Hypotézy, ktoré sa nám zdajú zaujímavé:
-1. percentage expenditure vs GDP nieco???
-2. Človek, ktorý ... sa dožíva dlhšieho veku. (niečo s alkoholom a choroby)
-3. Človek, ktorý žije v krajinách s vyšším GDP sa dožíva dlhšieho veku.
-4. človek, ktorý dlhšie študuje a je viac vzdelaný sa dožíva dlhšieho veku.
+# one hot encode status
+```{r}
+data %<>% 
+  mutate(status_oh = if_else(Status=='Developed', 1, 0)) %>%
+  relocate(status_oh)
+```
 
-Náš response variable bude "Life expectancy" a ostatné stĺpce budú prediktory.
-
-
-# Lineárna regresia - model
+# Rozdelenie dát na trénovacie a testovacie
 
 ```{r}
-# linear regression model
-model <- lm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
+# train test split
+set.seed(123)
+train_index <- sample(1:nrow(data), 0.8*nrow(data))
+train_data <- data[train_index,]
+test_data <- data[-train_index,]
+train_data
+test_data
+
+```
+Vidime, ze aj po random splite je status primerane rozdeleny
+
+```{r}
+train_data %>%
+  count(Status) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=Status, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
+
+test_data %>%
+  count(Status) %>%
+  rename(Count = n) %>%
+  ggplot(aes(x=Status, y=Count)) + 
+  geom_histogram(stat="identity", aes(fill=Count)) + 
+  scale_fill_viridis_c()
+```
+Drop na rows for used columns, to prevent removing during prediction:
+
+```{r}
+test_data %<>% 
+  select(status_oh, `Life expectancy`, `Adult Mortality`, Alcohol, 
+         `percentage expenditure`, BMI, `Total expenditure`, 
+         Diphtheria, `HIV/AIDS`, GDP, `Income composition of resources`, 
+         Schooling) %>%
+  drop_na()
+```
+
+# Experimenty
+## Regressia:
+
+### Hypotézy, ktoré sa nám zdajú zaujímavé:
+
+#### 1. Výdavky na jedlo súvisia s GDP krajiny
+
+Náš response variable bude "percentage expenditure" a ostatné stĺpce (GDP) budú prediktory.
+```{r}
+# model
+model = lm(`percentage expenditure` ~ GDP, data = train_data)
+summary(model)
+qqnorm(model$residuals)
+qqline(model$residuals)
+
+plot(model$residuals, model$fitted.values)
+
+shapiro.test(model$residuals)
+
+residuals <- model$residuals
+RSS <- sum((residuals-mean(residuals))^2)
+RSS
+
+RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/length(test_data$`Life expectancy`)))
+RMSE
+
+```
+Koeficient GDP (0.135) je štatisticky významný (p-hodnota < 0.001), čo naznačuje pozitívnu a silnú závislosť medzi percentuálnymi výdavkami na jedlo a GDP krajiny.
+
+Shapiro-Wilkov test normality reziduí odmieta nulovú hypotézu o normálnej distribúcii reziduí (p-hodnota < 0.001). To naznačuje, že reziduá nie sú z normálneho rozdelenia. Suma štvorcov reziduí (RSS) je 1785839046. RMSE, čo je štandardná miera presnosti modelu, je približne 1999.93.
+Môžeme potvrdiť hypotézu, že výdavky na jedlo súvisia s HDP krajiny.
+
+
+#### 2. Človek, ktorý sa dožíva dlhšieho veku má menej chorôb a nepije alkohol. 
+
+Náš response variable bude "Life expectancy" a ostatné stĺpce (HIV/AIDS, Alcohol) budú prediktory.
+```{r}
+# model
+model = lm(`Life expectancy` ~ `HIV/AIDS` + Alcohol, data = train_data)
+summary(model)
+
+
+qqnorm(model$residuals)
+qqline(model$residuals)
+
+plot(model$residuals, model$fitted.values)
+
+shapiro.test(model$residuals)
+
+residuals <- model$residuals
+RSS <- sum((residuals-mean(residuals))^2)
+RSS
+
+RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/length(test_data$`Life expectancy`)))
+RMSE
+```
+Koeficient pre HIV/AIDS je -1.00 a Alcohol 0.87. Tieto koeficienty majú štatistickú významnosť (p-hodnota < 0.001), čo naznačuje, že existuje negatívna závislosť medzi HIV/AIDS a dĺžkou života a pozitívna závislosť medzi alkoholom a dĺžkou života. 
+
+Shapiro-Wilkov test normality reziduí odmieta nulovú hypotézu o normálnej distribúcii reziduí (p-hodnota < 0.001). Reziduá nie sú z normálneho rozdelenia. Suma štvorcov reziduí (RSS) je 106782.8. RMSE, čo je štandardná miera presnosti modelu, je približne 7.304382.
+Môžeme potvrdiť hypotézu, že človek, ktorý sa dožíva dlhšieho veku má menej chorôb a nepije alkohol.
+
+
+
+#### 3. Človek, ktorý žije v krajinách s vyšším GDP sa dožíva dlhšieho veku.
+Náš response variable bude "Life expectancy" a ostatné stĺpce (GDP) budú prediktory.
+
+```{r}
+# model
+model = lm(`Life expectancy` ~ GDP, data = train_data)
+summary(model)
+qqnorm(model$residuals)
+qqline(model$residuals)
+
+plot(model$residuals, model$fitted.values)
+
+shapiro.test(model$residuals)
+
+residuals <- model$residuals
+RSS <- sum((residuals-mean(residuals))^2)
+RSS
+
+RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/length(test_data$`Life expectancy`)))
+RMSE
+```
+Koeficient pre GDP je 0.0003065, čo znamená, že každý nárast o jednu jednotku v GDP krajiny sa očakáva, že priemerný vek sa predĺži o 0.0003065 rokov. Tento koeficient je štatisticky významný (p-hodnota < 0.001), čo naznačuje pozitívnu závislosť medzi GDP krajiny a dĺžkou života.
+
+Shapiro-Wilkov test normality reziduí odmieta nulovú hypotézu o normálnej distribúcii reziduí (p-hodnota < 0.001). Reziduá nie sú z normálneho rozdelenia. Suma štvorcov reziduí (RSS) je 144285 RMSE, čo je štandardná miera presnosti modelu, je približne 8.731909.
+Potvrdila sa hypotéza, že človek, ktorý žije v krajinách s vyšším GDP, sa dožíva dlhšieho veku.
+
+#### 4. človek, ktorý dlhšie študuje a je viac vzdelaný sa dožíva dlhšieho veku v súvislosti s alkoholom.
+Náš response variable bude "Life expectancy" a ostatné stĺpce (Schooling,Alcohol) budú prediktory.
+
+```{r}
+# model
+model = lm(`Life expectancy` ~ Schooling + Alcohol, data = train_data)
+summary(model)
+qqnorm(model$residuals)
+qqline(model$residuals)
+
+plot(model$residuals, model$fitted.values)
+
+shapiro.test(model$residuals)
+
+residuals <- model$residuals
+RSS <- sum((residuals-mean(residuals))^2)
+RSS
+
+RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/length(test_data$`Life expectancy`)))
+RMSE
+
+```
+Koeficient pre Schooling je 2.18813 a Alcohol -0.0718. Koeficient pre Schooling je štatisticky významný (p-hodnota < 0.001), čo naznačuje, že štúdium má pozitívny vplyv na očakávanú dĺžku života. Naopak, koeficient pre Alcohol nie je štatisticky významný na úrovni 0,05 (p-hodnota = 0.078), čo hovorí, že neexistuje jasný dôkaz o vplyve alkoholu na dĺžku života.
+
+Shapiro-Wilkov test normality reziduí odmieta nulovú hypotézu o normálnej distribúcii reziduí (p-hodnota < 0.001). To naznačuje, že reziduá nie sú z normálneho rozdelenia. Suma štvorcov reziduí (RSS) je 81301.79. RMSE, čo je štandardná miera presnosti modelu, je 6.169674.
+
+Hypotéza sa potvrdila len čiastočne, že človek, ktorý dlhšie študuje a je viac vzdelaný sa dožíva dlhšieho veku. Alkohol nemá vplyv na dĺžku života v súvislosti so štúdiom.
+
+
+### Všetky prediktory
+
+```{r} 
+# model
+model = lm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
+             `percentage expenditure` + BMI + 
+             `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
+             `Income composition of resources` +
+             Schooling, data = train_data)
+summary(model)
+qqnorm(model$residuals)
+qqline(model$residuals)
+
+plot(model$residuals, model$fitted.values)
+
+shapiro.test(model$residuals)
+
+residuals <- model$residuals
+RSS <- sum((residuals-mean(residuals))^2)
+RSS
+
+RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/length(test_data$`Life expectancy`)))
+RMSE
+```
+Záporné koeficienty (ako Adult Mortality, Alcohol a HIV/AIDS) naznačujú negatívnu závislosť na Life expectancy, zatiaľ čo pozitívne koeficienty (ako BMI, Diphtheria, percentage expenditure, total expenditure,GDP, Income composition of resources a Schooling) naznačujú pozitívnu závislosť na Life expectancy. Hviezdičky pred hodnotami p-value znamenaju, ze su signifikantne. 
+
+## Classification:
+```{r}
+library(ROCit)
+```
+
+### Hypotézy, ktoré sa nám zdajú zaujímavé:
+
+#### 1. GDP a Schooling suvisí s tým, či je krajina rozvojová alebo rozvinutá
+
+Náš response variable bude "status_oh" a ostatné stĺpce (GDP, Schooling) budú prediktory.
+
+```{r}
+# model
+model = glm(status_oh ~ GDP + Schooling, data = train_data)
+summary(model)
+
+predictions <- predict(model, test_data)
+as.vector(predictions)
+
+actual <- test_data$status_oh
+as.vector(actual)
+
+# výpočet cut off hodnoty, ktorý naznačuje optimálny bod pre prahovu hodnotu, ktorá rozdeľuje predikcie na pozitívne a negatívne, čižew rozvojovú a rozvinutú krajinu.
+
+roc = rocit(predictions, actual)
+plot(roc)
+cutoff_index <- which.max(roc$TPR + (1 - roc$FPR) - 1)
+optimal_cutoff <- roc$Cutoff[cutoff_index]
+optimal_cutoff
+
+predictions
+predicted_class <- ifelse(predictions >= optimal_cutoff, 1, 0)
+predicted_class
+
+# onfussion matrix
+caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive = "1")
+
+
+```
+Celkovo model naznačuje, že GDP a školstvo sú významnými prediktormi rozvojového statusu krajiny, pričom vyššie gDP a úroveň školstva sú spojené s vyššou pravdepodobnosťou byť rozvinutou krajinou.
+Z confussion matrix vidíme, že náš model má 86,24% presnosť. 
+
+model = glm(status_oh ~ GDP + Schooling, data = train_data, family = binomial(link=logit))
+summary(model) ????
+
+
+
+
+### Všetky prediktory
+
+```{r}
+# model
+model = glm(status_oh ~ `Life expectancy` + `Adult Mortality` + Alcohol  +
               `percentage expenditure` + BMI + 
               `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
               `Income composition of resources` +
-              Schooling, data = data)
+              Schooling, data = train_data)
 summary(model)
+
+predictions <- predict(model, test_data)
+as.vector(predictions)
+
+actual <- test_data$status_oh
+as.vector(actual)
+
+roc = rocit(predictions, actual)
+plot(roc)
+cutoff_index <- which.max(roc$TPR + (1 - roc$FPR) - 1)
+optimal_cutoff <- roc$Cutoff[cutoff_index]
+optimal_cutoff
+
+predictions
+predicted_class <- ifelse(predictions >= optimal_cutoff, 1, 0)
+predicted_class
+
+# onfussion matrix
+caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive = "1")
+
 ```
-TODO popisat model
-Chceli by sme mat Median priblizne v strede medzi Max a Min hodnotou.
-Co priblizne sedi, median ma hodnotu -0.0527, Max ma hodnotu 21.9899 a Min ma hodnotu -21.1648. Nasa disribucia je symetricka.
 
-Z modelu vidime, ze Adult Mortality, HIV/AIDS a Alcohol maju negativny vplyv na Life expectancy. Naopak Total expenditure, BMI, Diphtheria, GDP, Income composition of resources a Schooling maju pozitivny vplyv na Life expectancy.
-Multiple R-squared:  0.8188 ,a hodnotu 82.84% co znamena, ze nase prediktory vysvetluju 82.84% variacie v Life expectancy.
-Hviezdičky pred hodnotami p-value znamenaju, ze su signifikantne.
+Z confussion matrix vidíme, že náš model má 91,27% presnosť. 
 
 
-```{r}
-
-```{r}
-# Quantile-quantile plot 
-qqnorm(model$residuals)
-qqline(model$residuals)
-```
-
-```{r}
-# Residuals vs Fitted plot
-plot(model$residuals, model$fitted.values)
-```
-
-```{r}
-
-# Normality test for hypothesis?
-shapiro.test(model$residuals)
-```
 
 
 Ďalší možný zaujímavý model
@@ -277,20 +512,6 @@ shapiro.test(model$residuals)
 # TODO make smaller models
 
 
-
-# Rozdelenie dát na trénovacie a testovacie
-
-```{r}
-# train test split
-set.seed(123)
-train_index <- sample(1:nrow(data), 0.8*nrow(data))
-train_data <- data[train_index,]
-test_data <- data[-train_index,]
-train_data
-test_data
-
-```
-TODO popisat v akom pomere a preco atd
 
 # SVM model
 
@@ -332,12 +553,3 @@ svm_model
 
 ```
 
-
-```{r}
-
-install.packages("countrycode")
-library(countrycode)
-data$Continent <- countrycode(data$Country, "country.name", "continent")
-data
-
-```
