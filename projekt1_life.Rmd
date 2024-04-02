@@ -155,13 +155,13 @@ ggplot(combined_missing_values, aes(x = column, y = missing_values, fill = type)
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-Kontrolovali sme aj ostatné chýbajúce hodnoty. Vidíme, že pomerne dosť sa ich nachádza aj v stĺpcoch **Population a hepatits B alebo GDB**. V ostaných je len menej, alebo žiadne.
+Kontrolovali sme aj ostatné chýbajúce hodnoty. Vidíme, že pomerne dosť sa ich nachádza aj v stĺpcoch **Population** a **hepatits B** alebo **GDB**. V ostaných je len menej, alebo žiadne.
 
 ## Pairplot
 
--identifikácia vzťahov a vzorov medzi premennými
+- identifikácia vzťahov a vzorov medzi premennými
 ```{r}
-#-----Helper functions----- z cvika
+#-----Helper functions----- z cvika, labov prebrate
 panel.cor <- function(x,y, digits=2, prefix="", cex.cor){
   usr <- par("usr")
   on.exit(par(usr))
@@ -240,7 +240,7 @@ test_data %>%
   scale_fill_viridis_c()
 ```
 
-Drop NA rows pre použité stĺpce v modeli, kvôli revencii proti odstráneniu počas predikcii:
+Drop NA rows pre použité stĺpce v modeli, kvôli prevencii proti odstráneniu počas predikcii:
 ```{r}
 test_data %<>% 
   select(status_oh, `Life expectancy`, `Adult Mortality`, Alcohol, 
@@ -279,7 +279,7 @@ data %$% pairs( ~ `percentage expenditure` + GDP)
 Koeficient **GDP (0.135)** je štatisticky významný (p-hodnota < 0.001), čo naznačuje **pozitívnu** a **silnú** závislosť medzi **percentuálnymi výdavkami na jedlo a GDP krajiny**.
 
 Q-Q plot ukazuje tiež, že **reziduá nie sú z normálneho rozdelenia**, pretože sa nezhodujú s priamkou.
-Suma štvorcov reziduí (RSS) je **1785839046**, čo hovori že náš model **nie je ideálny**. RMSE, čo je štandardná miera presnosti modelu, je približne **1999.93**.
+Suma štvorcov reziduí (RSS) je **1785839046**, čo hovorí, že náš model **nie je ideálny**. RMSE, čo je štandardná miera presnosti modelu, je **1999.928**.
 Môžeme **potvrdiť** hypotézu, že **výdavky na jedlo súvisia s GDP krajiny**.
 
 
@@ -304,7 +304,7 @@ data %$% pairs( ~ `Life expectancy` + `HIV/AIDS`+ Alcohol)
 
 ```
 
-Koeficient pre **HIV/AIDS je -1.00** a **Alcohol 0.87**. Tieto koeficienty majú štatistickú významnosť (p-hodnota < 0.001), čo naznačuje, že existuje **negatívna** závislosť medzi **HIV/AIDS a dĺžkou života** a **pozitívna** závislosť medzi **alkoholom a dĺžkou života**. 
+Koeficient pre **HIV/AIDS je -1.00015** a **Alcohol 0.87392**. Tieto koeficienty majú štatistickú významnosť (p-hodnota < 0.001), čo naznačuje, že existuje **negatívna** závislosť medzi **HIV/AIDS a dĺžkou života** a **pozitívna** závislosť medzi **alkoholom a dĺžkou života**. 
 Q-Q plot ukazuje, že reziduá **nie sú z normálneho rozdelenia**, ale vidime, ze sa zhoduju s priamkou omnoho viac ako v prvom experimente.
 Suma štvorcov reziduí (RSS) je **106782.8**. RMSE, čo je štandardná miera presnosti modelu, je približne **7.304382**.
 Môžeme **potvrdiť** hypotézu, že **človek, ktorý sa dožíva dlhšieho veku má menej chorôb a nepije alkohol**.
@@ -351,7 +351,7 @@ RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/l
 RMSE
 ```
 
-Vidime, ze zavislost Life expectancy od GDP je exponencialna. Preto sme GDP v tomto experimente skusili zlogaritmovat. Vidime, aj na pairplote, ze zavislost je rovnejsia, a aj RMSE je na zlogaritmovanom modeli nizsia.
+Vidíme z **pairplotu**, že závislosť **Life expectancy** od **GDP** je **exponenciálna**. Preto sme **GDP** v tomto experimente skúsili **zlogaritmovať** - transformácia. Vidíme, aj na pairplote, že závislosť je rovnejšia, a aj hodnota **RMSE** je na **zlogaritmovanom** modeli **nižšia**.
 
 #### 4. človek, ktorý dlhšie študuje a je viac vzdelaný sa dožíva dlhšieho veku v súvislosti s alkoholom.
 Náš **response** variable bude **"Life expectancy"** a ostatné stĺpce **(Schooling,Alcohol)** budú prediktory.
@@ -374,7 +374,7 @@ data %$% pairs( ~ `Life expectancy` + Schooling + Alcohol)
 
 ```
 
-Koeficient pre **Schooling je 2.18813** a **Alcohol -0.0718**. Koeficient pre Schooling je štatisticky významný (p-hodnota < 0.001), čo naznačuje, že štúdium má **pozitívny** vplyv na **očakávanú dĺžku života**. Naopak, koeficient pre **Alcohol nie je štatisticky významný na úrovni 0,05** (p-hodnota = 0.078), čo hovorí, že **neexistuje jasný dôkaz o vplyve alkoholu na dĺžku života**.
+Koeficient pre **Schooling je 2.18813** a **Alcohol -0.07186**. Koeficient pre Schooling je štatisticky významný (p-hodnota < 0.001), čo naznačuje, že štúdium má **pozitívny** vplyv na **očakávanú dĺžku života**. Naopak, koeficient pre **Alcohol nie je štatisticky významný na úrovni 0,05** (p-hodnota = 0.078), čo hovorí, že **neexistuje jasný dôkaz o vplyve alkoholu na dĺžku života**.
 
 Q-Q plot ukazuje, že reziduá **nie sú z normálneho rozdelenia**, pretože sa nezhodujú s priamkou. Môže byť napr. z logistickej distribúcie.Suma štvorcov reziduí (RSS) je **81301.79**. RMSE, čo je štandardná miera presnosti modelu, je **6.169674**.
 
@@ -433,10 +433,11 @@ optimal_cutoff
 
 predicted_class <- ifelse(predictions >= optimal_cutoff, 1, 0)
 
-# onfussion matrix
+# confussion matrix
 caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive = "1")
 
 ```
+
 Celkovo model naznačuje, že **GDP a školstvo** sú **významnými prediktormi rozvojového statusu krajiny**, pričom **vyššie GDP a úroveň školstva sú spojené s vyššou pravdepodobnosťou byť rozvinutou krajinou**.
 Z confussion matrix vidíme, že náš model má **86,24%** presnosť. 
 
