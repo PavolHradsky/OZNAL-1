@@ -237,6 +237,24 @@ RMSE
 
 data %$% pairs( ~ `Life expectancy` + GDP)
 
+    # zlogaritmovane
+model = lm(`Life expectancy` ~ log(GDP), data = train_data)
+summary(model)
+qqnorm(model$residuals)
+qqline(model$residuals)
+
+plot(model$residuals, model$fitted.values)
+
+shapiro.test(model$residuals)
+
+residuals <- model$residuals
+RSS <- sum((residuals-mean(residuals))^2)
+RSS
+
+RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/length(test_data$`Life expectancy`)))
+RMSE
+data %$% pairs( ~ `Life expectancy` + log(GDP))
+
 # 4. človek, ktorý dlhšie študuje a je viac vzdelaný sa dožíva dlhšieho veku.
 model = lm(`Life expectancy` ~ Schooling + Alcohol, data = train_data)
 summary(model)
