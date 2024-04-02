@@ -334,6 +334,28 @@ Q-Q plot ukazuje, že reziduá nie sú z normálneho rozdelenia, pretože sa nez
 Shapiro-Wilkov test normality reziduí odmieta nulovú hypotézu o normálnej distribúcii reziduí (p-hodnota < 0.001). **Reziduá nie sú z normálneho rozdelenia**. Suma štvorcov reziduí (RSS) je **144285** RMSE, čo je štandardná miera presnosti modelu, je približne **8.731909**.
 **Potvrdila** sa hypotéza, že **človek, ktorý žije v krajinách s vyšším GDP, sa dožíva dlhšieho veku**.
 
+```{r}
+data %$% pairs( ~ `Life expectancy` + GDP)
+data %$% pairs( ~ `Life expectancy` + log(GDP))
+
+model = lm(`Life expectancy` ~ log(GDP), data = train_data)
+summary(model)
+qqnorm(model$residuals)
+qqline(model$residuals)
+
+plot(model$residuals, model$fitted.values)
+
+shapiro.test(model$residuals)
+
+residuals <- model$residuals
+RSS <- sum((residuals-mean(residuals))^2)
+RSS
+
+RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/length(test_data$`Life expectancy`)))
+RMSE
+```
+Vidime, ze zavislost Life expectancy od GDP je exponencialna. Preto sme GDP v tomto experimente skusili zlogaritmovat. Vidime, aj na pairplote, ze zavislost je rovnejsia, a aj RMSE je na zlogaritmovanom modeli nizsia.
+
 #### 4. človek, ktorý dlhšie študuje a je viac vzdelaný sa dožíva dlhšieho veku v súvislosti s alkoholom.
 Náš **response** variable bude **"Life expectancy"** a ostatné stĺpce **(Schooling,Alcohol)** budú prediktory.
 
