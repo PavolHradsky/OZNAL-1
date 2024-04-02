@@ -255,7 +255,7 @@ test_data %<>%
 
 ### Hypotézy, ktoré sa nám zdajú zaujímavé:
 
-#### 1. Výdavky na jedlo súvisia s GDP krajiny
+#### H0 1. Výdavky na jedlo súvisia s GDP krajiny
 
 Náš **response** variable bude **"percentage expenditure"** a **GDP** bude **prediktor**.
 ```{r}
@@ -283,7 +283,7 @@ Suma štvorcov reziduí (RSS) je **1785839046**, čo hovorí, že náš model **
 Môžeme **potvrdiť** hypotézu, že **výdavky na jedlo súvisia s GDP krajiny**.
 
 
-#### 2. Človek, ktorý sa dožíva dlhšieho veku má menej chorôb a nepije alkohol. 
+#### H0 2. Človek, ktorý sa dožíva dlhšieho veku má menej chorôb a nepije alkohol. 
 
 Náš **response** variable bude **"Life expectancy"** a ostatné stĺpce **(HIV/AIDS, Alcohol)** budú **prediktory**.
 ```{r}
@@ -311,7 +311,7 @@ Môžeme **potvrdiť** hypotézu, že **človek, ktorý sa dožíva dlhšieho ve
 
 
 
-#### 3. Človek, ktorý žije v krajinách s vyšším GDP sa dožíva dlhšieho veku.
+#### H0 3. Človek, ktorý žije v krajinách s vyšším GDP sa dožíva dlhšieho veku.
 Náš **response** variable bude **"Life expectancy"** a **GDP** bude **prediktor**.
 
 ```{r}
@@ -353,7 +353,7 @@ RMSE
 
 Vidíme z **pairplotu**, že závislosť **Life expectancy** od **GDP** je **exponenciálna**. Preto sme **GDP** v tomto experimente skúsili **zlogaritmovať** - transformácia. Vidíme, aj na pairplote, že závislosť je rovnejšia, a aj hodnota **RMSE** je na **zlogaritmovanom** modeli **nižšia**.
 
-#### 4. človek, ktorý dlhšie študuje a je viac vzdelaný sa dožíva dlhšieho veku v súvislosti s alkoholom.
+#### H0 4. človek, ktorý dlhšie študuje a je viac vzdelaný sa dožíva dlhšieho veku v súvislosti s alkoholom.
 Náš **response** variable bude **"Life expectancy"** a ostatné stĺpce **(Schooling,Alcohol)** budú prediktory.
 
 ```{r}
@@ -410,7 +410,7 @@ Hviezdičky pred hodnotami p-value znamenaju, že sä signifikantné.
 
 ### Hypotézy, ktoré sa nám zdajú zaujímavé:
 
-#### 1. GDP a Schooling suvisí s tým, či je krajina rozvojová alebo rozvinutá
+#### H0 1. GDP a Schooling suvisí s tým, či je krajina rozvojová alebo rozvinutá.
 
 Náš **response** variable bude **"status_oh"** a ostatné stĺpce **(GDP, Schooling)** budú **prediktory**.
 
@@ -441,6 +441,29 @@ caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive =
 Celkovo model naznačuje, že **GDP a školstvo** sú **významnými prediktormi rozvojového statusu krajiny**, pričom **vyššie GDP a úroveň školstva sú spojené s vyššou pravdepodobnosťou byť rozvinutou krajinou**.
 Z confussion matrix vidíme, že náš model má **86,24%** presnosť. 
 
+```{r}
+data %>%
+  ggplot(., aes(x = Schooling, y = status_oh)) +  # Specify X and Y variables
+  geom_point(position = position_jitter(width = 0.3, height = 0.06), 
+             alpha = 0.05, 
+             shape = 1, 
+             size = 1.5) + 
+  stat_smooth(method = glm, method.args = list(family = binomial)) +
+  ggtitle("Schooling vs status_oh")
+```
+
+```{r}
+data %>%
+  ggplot(., aes(x = GDP, y = status_oh)) +  # Specify X and Y variables
+  geom_point(position = position_jitter(width = 0.3, height = 0.06), 
+             alpha = 0.05, 
+             shape = 1, 
+             size = 1.5) + 
+  stat_smooth(method = glm, method.args = list(family = binomial)) +
+  ggtitle("GDP vs status_oh")
+```
+
+Schooling viac vplýva na status krajiny (rozvinutá/nerozvinutá) ako GDP z grafu pre logistickú funkciu.
 
 ### Všetky prediktory
 
