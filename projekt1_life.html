@@ -527,7 +527,7 @@ missing_values_life_axpextancy</code></pre>
 <pre><code>## package &#39;countrycode&#39; successfully unpacked and MD5 sums checked
 ## 
 ## The downloaded binary packages are in
-##  C:\Users\peter\AppData\Local\Temp\RtmpMPpbto\downloaded_packages</code></pre>
+##  C:\Users\peter\AppData\Local\Temp\RtmpKKnJ3L\downloaded_packages</code></pre>
 <pre class="r"><code>library(countrycode)
 data$Continent &lt;- countrycode(data$Country, &quot;country.name&quot;, &quot;continent&quot;)
 data</code></pre>
@@ -817,12 +817,14 @@ RMSE</code></pre>
 (p-hodnota &lt; 0.001), čo naznačuje <strong>pozitívnu</strong> a
 <strong>silnú</strong> závislosť medzi <strong>percentuálnymi výdavkami
 na jedlo a GDP krajiny</strong>.</p>
-<p>Shapiro-Wilkov test normality reziduí odmieta nulovú hypotézu o
-normálnej distribúcii reziduí (p-hodnota &lt; 0.001). To naznačuje, že
-<strong>reziduá nie sú z normálneho rozdelenia</strong>. Suma štvorcov
-reziduí (RSS) je <strong>1785839046</strong>, čo hovori že náš model
-<strong>nie je ideálny</strong>. RMSE, čo je štandardná miera presnosti
-modelu, je približne <strong>1999.93</strong>. Môžeme
+<p>Q-Q plot ukazuje tiež, že reziduá nie sú z normálneho rozdelenia,
+pretože sa nezhodujú s priamkou. Môže byť napr. z logistickej
+distribúcie. Shapiro-Wilkov test normality reziduí odmieta nulovú
+hypotézu o normálnej distribúcii reziduí (p-hodnota &lt; 0.001). To
+naznačuje, že <strong>reziduá nie sú z normálneho rozdelenia</strong>.
+Suma štvorcov reziduí (RSS) je <strong>1785839046</strong>, čo hovori že
+náš model <strong>nie je ideálny</strong>. RMSE, čo je štandardná miera
+presnosti modelu, je približne <strong>1999.93</strong>. Môžeme
 <strong>potvrdiť</strong> hypotézu, že <strong>výdavky na jedlo súvisia
 s GDP krajiny</strong>.</p>
 </div>
@@ -876,12 +878,13 @@ RMSE</code></pre>
 &lt; 0.001), čo naznačuje, že existuje <strong>negatívna</strong>
 závislosť medzi <strong>HIV/AIDS a dĺžkou života</strong> a
 <strong>pozitívna</strong> závislosť medzi <strong>alkoholom a dĺžkou
-života</strong>.</p>
-<p>Shapiro-Wilkov test normality reziduí odmieta nulovú hypotézu o
-normálnej distribúcii reziduí (p-hodnota &lt; 0.001). <strong>Reziduá
-nie sú z normálneho rozdelenia</strong>. Suma štvorcov reziduí (RSS) je
-<strong>106782.8</strong>. RMSE, čo je štandardná miera presnosti
-modelu, je približne <strong>7.304382</strong>. Môžeme
+života</strong>. Q-Q plot ukazuje, že reziduá nie sú z normálneho
+rozdelenia, pretože sa nezhodujú s priamkou. Môže byť napr. z
+logistického rozdelenia. Shapiro-Wilkov test normality reziduí odmieta
+nulovú hypotézu o normálnej distribúcii reziduí (p-hodnota &lt; 0.001).
+<strong>Reziduá nie sú z normálneho rozdelenia</strong>. Suma štvorcov
+reziduí (RSS) je <strong>106782.8</strong>. RMSE, čo je štandardná miera
+presnosti modelu, je približne <strong>7.304382</strong>. Môžeme
 <strong>potvrdiť</strong> hypotézu, že <strong>človek, ktorý sa dožíva
 dlhšieho veku má menej chorôb a nepije alkohol</strong>.</p>
 </div>
@@ -934,14 +937,15 @@ každý nárast o jednu jednotku v GDP krajiny sa očakáva, že priemerný vek
 sa <strong>predĺži</strong> o <strong>0.0003065 rokov</strong>. Tento
 koeficient je štatisticky významný (p-hodnota &lt; 0.001), čo naznačuje
 <strong>pozitívnu</strong> závislosť medzi <strong>GDP krajiny a dĺžkou
-života</strong>.</p>
-<p>Shapiro-Wilkov test normality reziduí odmieta nulovú hypotézu o
-normálnej distribúcii reziduí (p-hodnota &lt; 0.001). <strong>Reziduá
-nie sú z normálneho rozdelenia</strong>. Suma štvorcov reziduí (RSS) je
-<strong>144285</strong> RMSE, čo je štandardná miera presnosti modelu,
-je približne <strong>8.731909</strong>. <strong>Potvrdila</strong> sa
-hypotéza, že <strong>človek, ktorý žije v krajinách s vyšším GDP, sa
-dožíva dlhšieho veku</strong>.</p>
+života</strong>. Q-Q plot ukazuje, že reziduá nie sú z normálneho
+rozdelenia, pretože sa nezhodujú s priamkou. Môžu byť napr. z
+logistickej distribúcie. Shapiro-Wilkov test normality reziduí odmieta
+nulovú hypotézu o normálnej distribúcii reziduí (p-hodnota &lt; 0.001).
+<strong>Reziduá nie sú z normálneho rozdelenia</strong>. Suma štvorcov
+reziduí (RSS) je <strong>144285</strong> RMSE, čo je štandardná miera
+presnosti modelu, je približne <strong>8.731909</strong>.
+<strong>Potvrdila</strong> sa hypotéza, že <strong>človek, ktorý žije v
+krajinách s vyšším GDP, sa dožíva dlhšieho veku</strong>.</p>
 </div>
 <div id="človek-ktorý-dlhšie-študuje-a-je-viac-vzdelaný-sa-dožíva-dlhšieho-veku-v-súvislosti-s-alkoholom." class="section level4">
 <h4>4. človek, ktorý dlhšie študuje a je viac vzdelaný sa dožíva
@@ -995,12 +999,14 @@ RMSE</code></pre>
 života</strong>. Naopak, koeficient pre <strong>Alcohol nie je
 štatisticky významný na úrovni 0,05</strong> (p-hodnota = 0.078), čo
 hovorí, že <strong>neexistuje jasný dôkaz o vplyve alkoholu na dĺžku
-života</strong>.</p>
-<p>Shapiro-Wilkov test normality reziduí odmieta nulovú hypotézu o
-normálnej distribúcii reziduí (p-hodnota &lt; 0.001). To naznačuje, že
-<strong>reziduá nie sú z normálneho rozdelenia</strong>. Suma štvorcov
-reziduí (RSS) je <strong>81301.79</strong>. RMSE, čo je štandardná miera
-presnosti modelu, je <strong>6.169674</strong>.</p>
+života</strong>. Q-Q plot ukazuje, že reziduá nie sú z normálneho
+rozdelenia, pretože sa nezhodujú s priamkou. Môže byť napr. z
+logistickej distribúcie. Shapiro-Wilkov test normality reziduí odmieta
+nulovú hypotézu o normálnej distribúcii reziduí (p-hodnota &lt; 0.001).
+To naznačuje, že <strong>reziduá nie sú z normálneho
+rozdelenia</strong>. Suma štvorcov reziduí (RSS) je
+<strong>81301.79</strong>. RMSE, čo je štandardná miera presnosti
+modelu, je <strong>6.169674</strong>.</p>
 <p><strong>Hypotéza sa potvrdila len čiastočne</strong>, že
 <strong>človek, ktorý dlhšie študuje a je viac vzdelaný sa dožíva
 dlhšieho veku. Alkohol nemá vplyv na dĺžku života v súvislosti so

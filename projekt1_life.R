@@ -192,6 +192,9 @@ RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/l
 RMSE
 
 
+data %$% pairs( ~ `percentage expenditure` + GDP)
+
+
 # 2. Človek, ktorý ... sa dožíva dlhšieho veku. (niečo s alkoholom a choroby)
 model = lm(`Life expectancy` ~ `HIV/AIDS` + Alcohol, data = train_data)
 summary(model)
@@ -211,6 +214,10 @@ RSS
 RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/length(test_data$`Life expectancy`)))
 RMSE
 
+
+data %$% pairs( ~ `Life expectancy` + `HIV/AIDS`+ Alcohol)
+
+
 # 3. Človek, ktorý žije v krajinách s vyšším GDP sa dožíva dlhšieho veku.
 model = lm(`Life expectancy` ~ GDP, data = train_data)
 summary(model)
@@ -227,6 +234,8 @@ RSS
 
 RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/length(test_data$`Life expectancy`)))
 RMSE
+
+data %$% pairs( ~ `Life expectancy` + GDP)
 
 # 4. človek, ktorý dlhšie študuje a je viac vzdelaný sa dožíva dlhšieho veku.
 model = lm(`Life expectancy` ~ Schooling + Alcohol, data = train_data)
@@ -245,6 +254,7 @@ RSS
 RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/length(test_data$`Life expectancy`)))
 RMSE
 
+data %$% pairs( ~ `Life expectancy` + Schooling + Alcohol)
 
 # All :)
 model = lm(`Life expectancy` ~ `Adult Mortality` + Alcohol  +
@@ -266,7 +276,6 @@ RSS
 
 RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/length(test_data$`Life expectancy`)))
 RMSE
-
 
 # Classification:
 
@@ -291,6 +300,8 @@ predicted_class <- ifelse(predictions >= optimal_cutoff, 1, 0)
 predicted_class
 
 caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive = "1")
+
+data %$% pairs( ~ status_oh + GDP + Schooling)
 
 
 # all :)

@@ -277,6 +277,7 @@ RMSE
 ```
 Koeficient **GDP (0.135)** je štatisticky významný (p-hodnota < 0.001), čo naznačuje **pozitívnu** a **silnú** závislosť medzi **percentuálnymi výdavkami na jedlo a GDP krajiny**.
 
+Q-Q plot ukazuje tiež, že reziduá nie sú z normálneho rozdelenia, pretože sa nezhodujú s priamkou. Môže byť napr. z logistickej distribúcie.
 Shapiro-Wilkov test normality reziduí odmieta nulovú hypotézu o normálnej distribúcii reziduí (p-hodnota < 0.001). To naznačuje, že **reziduá nie sú z normálneho rozdelenia**. Suma štvorcov reziduí (RSS) je **1785839046**, čo hovori že náš model **nie je ideálny**. RMSE, čo je štandardná miera presnosti modelu, je približne **1999.93**.
 Môžeme **potvrdiť** hypotézu, že **výdavky na jedlo súvisia s GDP krajiny**.
 
@@ -303,7 +304,7 @@ RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/l
 RMSE
 ```
 Koeficient pre **HIV/AIDS je -1.00** a **Alcohol 0.87**. Tieto koeficienty majú štatistickú významnosť (p-hodnota < 0.001), čo naznačuje, že existuje **negatívna** závislosť medzi **HIV/AIDS a dĺžkou života** a **pozitívna** závislosť medzi **alkoholom a dĺžkou života**. 
-
+Q-Q plot ukazuje, že reziduá nie sú z normálneho rozdelenia, pretože sa nezhodujú s priamkou. Môže byť napr. z logistického rozdelenia.
 Shapiro-Wilkov test normality reziduí odmieta nulovú hypotézu o normálnej distribúcii reziduí (p-hodnota < 0.001). **Reziduá nie sú z normálneho rozdelenia**. Suma štvorcov reziduí (RSS) je **106782.8**. RMSE, čo je štandardná miera presnosti modelu, je približne **7.304382**.
 Môžeme **potvrdiť** hypotézu, že **človek, ktorý sa dožíva dlhšieho veku má menej chorôb a nepije alkohol**.
 
@@ -329,7 +330,7 @@ RMSE <- sqrt(sum(((predict(model, test_data)) - test_data$`Life expectancy`)^2/l
 RMSE
 ```
 Koeficient pre **GDP je 0.0003065**, čo znamená, že každý nárast o jednu jednotku v GDP krajiny sa očakáva, že priemerný vek sa **predĺži** o **0.0003065 rokov**. Tento koeficient je štatisticky významný (p-hodnota < 0.001), čo naznačuje **pozitívnu** závislosť medzi **GDP krajiny a dĺžkou života**.
-
+Q-Q plot ukazuje, že reziduá nie sú z normálneho rozdelenia, pretože sa nezhodujú s priamkou. Môžu byť napr. z logistickej distribúcie.
 Shapiro-Wilkov test normality reziduí odmieta nulovú hypotézu o normálnej distribúcii reziduí (p-hodnota < 0.001). **Reziduá nie sú z normálneho rozdelenia**. Suma štvorcov reziduí (RSS) je **144285** RMSE, čo je štandardná miera presnosti modelu, je približne **8.731909**.
 **Potvrdila** sa hypotéza, že **človek, ktorý žije v krajinách s vyšším GDP, sa dožíva dlhšieho veku**.
 
@@ -354,7 +355,7 @@ RMSE
 
 ```
 Koeficient pre **Schooling je 2.18813** a **Alcohol -0.0718**. Koeficient pre Schooling je štatisticky významný (p-hodnota < 0.001), čo naznačuje, že štúdium má **pozitívny** vplyv na **očakávanú dĺžku života**. Naopak, koeficient pre **Alcohol nie je štatisticky významný na úrovni 0,05** (p-hodnota = 0.078), čo hovorí, že **neexistuje jasný dôkaz o vplyve alkoholu na dĺžku života**.
-
+Q-Q plot ukazuje, že reziduá nie sú z normálneho rozdelenia, pretože sa nezhodujú s priamkou. Môže byť napr. z logistickej distribúcie.
 Shapiro-Wilkov test normality reziduí odmieta nulovú hypotézu o normálnej distribúcii reziduí (p-hodnota < 0.001). To naznačuje, že **reziduá nie sú z normálneho rozdelenia**. Suma štvorcov reziduí (RSS) je **81301.79**. RMSE, čo je štandardná miera presnosti modelu, je **6.169674**.
 
 **Hypotéza sa potvrdila len čiastočne**, že **človek, ktorý dlhšie študuje a je viac vzdelaný sa dožíva dlhšieho veku. Alkohol nemá vplyv na dĺžku života v súvislosti so štúdiom.**
