@@ -527,7 +527,7 @@ missing_values_life_axpextancy</code></pre>
 <pre><code>## package &#39;countrycode&#39; successfully unpacked and MD5 sums checked
 ## 
 ## The downloaded binary packages are in
-##  C:\Users\peter\AppData\Local\Temp\RtmpUxsUKt\downloaded_packages</code></pre>
+##  C:\Users\peter\AppData\Local\Temp\Rtmpqqr2Rt\downloaded_packages</code></pre>
 <pre class="r"><code>library(countrycode)
 data$Continent &lt;- countrycode(data$Country, &quot;country.name&quot;, &quot;continent&quot;)
 data</code></pre>
@@ -1171,8 +1171,9 @@ caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive =
 <p>Celkovo model naznačuje, že <strong>GDP a školstvo</strong> sú
 <strong>významnými prediktormi rozvojového statusu krajiny</strong>,
 pričom <strong>vyššie GDP a úroveň školstva sú spojené s vyššou
-pravdepodobnosťou byť rozvinutou krajinou</strong>. Z confussion matrix
-vidíme, že náš model má <strong>86,24%</strong> presnosť.</p>
+pravdepodobnosťou byť rozvinutou krajinou</strong>. Spravili sme cross
+tabulaciu a z confusion matrix vidíme, že náš model má
+<strong>86,24%</strong> presnosť.</p>
 <pre class="r"><code>data %&gt;%
   ggplot(., aes(x = Schooling, y = status_oh)) +  # Specify X and Y variables
   geom_point(position = position_jitter(width = 0.3, height = 0.06), 
