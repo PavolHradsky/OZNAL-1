@@ -145,6 +145,7 @@ test_data <- data[-train_index,]
 train_data
 test_data
 
+
                 # Vidime, ze aj po random splite je status primerane rozdeleny
 train_data %>%
   count(Status) %>%
@@ -320,33 +321,6 @@ predicted_class
 caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive = "1")
 
 data %$% pairs( ~ status_oh + GDP + Schooling)
-
-
-# all :)
-model = glm(status_oh ~ `Life expectancy` + `Adult Mortality` + Alcohol  +
-              `percentage expenditure` + BMI + 
-              `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
-              `Income composition of resources` +
-              Schooling, data = train_data)
-summary(model)
-
-predictions <- predict(model, test_data)
-as.vector(predictions)
-
-actual <- test_data$status_oh
-as.vector(actual)
-
-roc = rocit(predictions, actual)
-plot(roc)
-cutoff_index <- which.max(roc$TPR + (1 - roc$FPR) - 1)
-optimal_cutoff <- roc$Cutoff[cutoff_index]
-optimal_cutoff
-
-predictions
-predicted_class <- ifelse(predictions >= optimal_cutoff, 1, 0)
-predicted_class
-
-caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive = "1")
 
 
 
