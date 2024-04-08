@@ -491,6 +491,8 @@ confusionMatrix(as.factor(predicted_class_svm_rad), as.factor(test_data$status_o
 
 ```
 
+Accuracy je 86,24%.
+
 # Linear SVM metóda
 ```{r}
 
@@ -513,8 +515,11 @@ predicted_class_svm_ln <- ifelse(svm_predictions >= optimal_cutoff, 1, 0)
 # Confusion matrix
 confusionMatrix(as.factor(predicted_class_svm_ln), as.factor(test_data$status_oh))
 
-
+#predicted <- predict(svm_model,data)
+#confusionMatrix(table(predicted, data$status_oh))
 ```
+
+Accuracy je 66,38%.
 
 # Naive Bayes metóda
 ```{r}
@@ -543,9 +548,10 @@ confusionMatrix(as.factor(predicted_class_nb), as.factor(test_data$status_oh))
 
 ```
 
+Accuracy je 81,66%.
 
-# Random Forest ma problemy s chybajucimi hodnotammi v train_data, mozem ich omitnut
-# give me number of missing values in each column
+## Random Forest ma problemy s chybajucimi hodnotammi v train_data, mozem ich omitnut
+### gives me number of missing values in each column
 ```{r}
 sapply(train_data, function(x) sum(is.na(x))) # chybajuce hodnoty v stlpcoch
 
@@ -582,6 +588,8 @@ confusionMatrix(as.factor(predicted_class_randomm_forrest), as.factor(test_data$
 
 ```
 
+Accuracy je 79,26%.
+
 # LDA metóda
 ```{r}
 library(MASS)
@@ -609,6 +617,8 @@ predicted_class_lda <- ifelse(lda_predictions$posterior[, "1"] >= optimal_cutoff
 confusionMatrix(as.factor(predicted_class_lda), as.factor(test_data$status_oh))
 
 ```
+
+Accuracy je 86,24%. Podobne ako pri SVM-radial metóde.
 
 ## Model performance parameters v 1 tabuľke
 ```{r}

@@ -527,7 +527,7 @@ missing_values_life_axpextancy</code></pre>
 <pre><code>## package &#39;countrycode&#39; successfully unpacked and MD5 sums checked
 ## 
 ## The downloaded binary packages are in
-##  C:\Users\peter\AppData\Local\Temp\Rtmp6d2a2V\downloaded_packages</code></pre>
+##  C:\Users\peter\AppData\Local\Temp\Rtmp6rNWWD\downloaded_packages</code></pre>
 <pre class="r"><code>library(countrycode)
 data$Continent &lt;- countrycode(data$Country, &quot;country.name&quot;, &quot;continent&quot;)
 data</code></pre>
@@ -1261,6 +1261,7 @@ confusionMatrix(as.factor(predicted_class_svm_rad), as.factor(test_data$status_o
 ##                                           
 ##        &#39;Positive&#39; Class : 0               
 ## </code></pre>
+<p>Accuracy je 86,24%.</p>
 </div>
 <div id="linear-svm-metóda" class="section level1">
 <h1>Linear SVM metóda</h1>
@@ -1324,6 +1325,9 @@ confusionMatrix(as.factor(predicted_class_svm_ln), as.factor(test_data$status_oh
 ##                                           
 ##        &#39;Positive&#39; Class : 0               
 ## </code></pre>
+<pre class="r"><code>#predicted &lt;- predict(svm_model,data)
+#confusionMatrix(table(predicted, data$status_oh))</code></pre>
+<p>Accuracy je 66,38%.</p>
 </div>
 <div id="naive-bayes-metóda" class="section level1">
 <h1>Naive Bayes metóda</h1>
@@ -1380,13 +1384,12 @@ confusionMatrix(as.factor(predicted_class_nb), as.factor(test_data$status_oh))</
 ##                                          
 ##        &#39;Positive&#39; Class : 0              
 ## </code></pre>
-</div>
-<div id="random-forest-ma-problemy-s-chybajucimi-hodnotammi-v-train_data-mozem-ich-omitnut" class="section level1">
-<h1>Random Forest ma problemy s chybajucimi hodnotammi v train_data,
-mozem ich omitnut</h1>
-</div>
-<div id="give-me-number-of-missing-values-in-each-column" class="section level1">
-<h1>give me number of missing values in each column</h1>
+<p>Accuracy je 81,66%.</p>
+<div id="random-forest-ma-problemy-s-chybajucimi-hodnotammi-v-train_data-mozem-ich-omitnut" class="section level2">
+<h2>Random Forest ma problemy s chybajucimi hodnotammi v train_data,
+mozem ich omitnut</h2>
+<div id="gives-me-number-of-missing-values-in-each-column" class="section level3">
+<h3>gives me number of missing values in each column</h3>
 <pre class="r"><code>sapply(train_data, function(x) sum(is.na(x))) # chybajuce hodnoty v stlpcoch</code></pre>
 <pre><code>##                       status_oh                         Country 
 ##                               0                               0 
@@ -1416,6 +1419,8 @@ mozem ich omitnut</h1>
 
 nrow(na.omit(train_data))</code></pre>
 <pre><code>## [1] 1310</code></pre>
+</div>
+</div>
 </div>
 <div id="random-forest-metóda" class="section level1">
 <h1>Random Forest metóda</h1>
@@ -1487,6 +1492,7 @@ confusionMatrix(as.factor(predicted_class_randomm_forrest), as.factor(test_data$
 ##                                           
 ##        &#39;Positive&#39; Class : 0               
 ## </code></pre>
+<p>Accuracy je 79,26%.</p>
 </div>
 <div id="lda-metóda" class="section level1">
 <h1>LDA metóda</h1>
@@ -1551,6 +1557,7 @@ confusionMatrix(as.factor(predicted_class_lda), as.factor(test_data$status_oh))<
 ##                                           
 ##        &#39;Positive&#39; Class : 0               
 ## </code></pre>
+<p>Accuracy je 86,24%. Podobne ako pri SVM-radial metóde.</p>
 <div id="model-performance-parameters-v-1-tabuľke" class="section level2">
 <h2>Model performance parameters v 1 tabuľke</h2>
 <pre class="r"><code># factor conversion 
