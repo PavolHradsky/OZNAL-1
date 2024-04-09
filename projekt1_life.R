@@ -322,5 +322,3 @@ caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive =
 
 data %$% pairs( ~ status_oh + GDP + Schooling)
 
-
-

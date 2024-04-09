@@ -531,17 +531,17 @@ summary(nb_model)
 # Predictions
 nb_predictions <- predict(nb_model, newdata = test_data, type = "raw")
 
-# ROC analysis
-library(pROC)
-roc_nb <- roc(test_data$status_oh, nb_predictions[, "1"])
+actual <- test_data$status_oh
+
+roc_nb = rocit(nb_predictions[, 2], actual)
 plot(roc_nb)
 
 # Calculate optimal cutoff
-cutoff_index <- which.max(roc_nb$specificities + roc_nb$sensitivities - 1)
-optimal_cutoff <- roc_nb$thresholds[cutoff_index]
+cutoff_index <- which.max(roc_nb$TPR - roc_nb$FPR)
+optimal_cutoff <- roc_nb$Cutoff[cutoff_index]
 
 # Predicted class based on optimal cutoff
-predicted_class_nb <- ifelse(nb_predictions[, "1"] >= optimal_cutoff, 1, 0)
+predicted_class_nb <- ifelse(nb_predictions[, 2] >= optimal_cutoff, 1, 0)
 
 # Confusion matrix
 confusionMatrix(as.factor(predicted_class_nb), as.factor(test_data$status_oh))
@@ -560,6 +560,7 @@ sapply(train_data, function(x) sum(is.na(x))) # chybajuce hodnoty v stlpcoch
 # count na data which will be omitted
 
 nrow(na.omit(train_data))
+train_data_rf = na.omit(train_data)
 
 ```
 # Random Forest metóda
@@ -568,7 +569,7 @@ nrow(na.omit(train_data))
 library(randomForest)
 
 # Model
-rf_model <- randomForest(status_oh ~ GDP + Schooling, data = na.omit(train_data))
+rf_model <- randomForest(status_oh ~ GDP + Schooling, data = train_data_rf)
 summary(rf_model)
 # Predictions
 rf_predictions <- predict(rf_model, test_data)
@@ -600,18 +601,19 @@ summary(lda_model)
 
 # Predictions
 
-lda_predictions <- predict(lda_model, newdata = test_data)
+lda_predictions <- predict(lda_model, newdata = test_data)$posterior[, "1"]
 
-# ROC analysis
-roc_lda <- roc(test_data$status_oh, lda_predictions$posterior[, "1"])
+actual <- test_data$status_oh
+
+roc_lda = rocit(lda_predictions, actual)
 plot(roc_lda)
 
 # Calculate optimal cutoff
-cutoff_index <- which.max(roc_lda$specificities + roc_lda$sensitivities - 1)
-optimal_cutoff <- roc_lda$thresholds[cutoff_index]
+cutoff_index <- which.max(roc_lda$TPR - roc_lda$FPR)
+optimal_cutoff <- roc_lda$Cutoff[cutoff_index]
 
 # Predicted class based on optimal cutoff
-predicted_class_lda <- ifelse(lda_predictions$posterior[, "1"] >= optimal_cutoff, 1, 0)
+predicted_class_lda <- ifelse(lda_predictions >= optimal_cutoff, 1, 0)
 
 # Confusion matrix
 confusionMatrix(as.factor(predicted_class_lda), as.factor(test_data$status_oh))
@@ -711,7 +713,7 @@ optimal_cutoff
 predicted_class <- ifelse(predictions >= optimal_cutoff, 1, 0)
 
 # onfussion matrix
-caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive = "1")
+confusionMatrix(as.factor(predicted_class), as.factor(actual), positive = "1")
 
 ```
 
@@ -749,30 +751,28 @@ confusionMatrix(as.factor(predicted_class), as.factor(test_data$status_oh))
 
 
 ```{r}
-#install.packages("randomForest")
-#library(randomForest)
-
-# Model
-#rf_model <- randomForest(status_oh ~ `Life expectancy` + `Adult Mortality` + Alcohol  +
-#              `percentage expenditure` + BMI + 
-#              `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
-#              `Income composition of resources` + Schooling, data = train_data)
-#summary(rf_model)
-# Predictions
-#rf_predictions <- predict(rf_model, test_data)
-
-#actual <- test_data$status_oh
-#roc = rocit(rf_predictions, actual)
-#plot(roc)
-#cutoff_index <- which.max(roc$TPR + (1 - roc$FPR) - 1)
-#optimal_cutoff <- roc$Cutoff[cutoff_index]
-#optimal_cutoff
-
-#predicted_class <- ifelse(rf_predictions >= optimal_cutoff, 1, 0)
-
-
-# Confusion matrix
-#confusionMatrix(as.factor(predicted_class), as.factor(test_data$status_oh))
+# library(randomForest)
+# # Model
+# rf_model <- randomForest(status_oh ~ train_data_rf$`Life expectancy` + train_data_rf$`Adult # Mortality` + train_data_rf$Alcohol  +
+#               train_data_rf$`percentage expenditure` + train_data_rf$BMI + 
+#               train_data_rf$`Total expenditure` + train_data_rf$Diphtheria + # train_data_rf$`HIV/AIDS` + train_data_rf$GDP +
+#               train_data_rf$`Income composition of resources` + train_data_rf$Schooling, data = # train_data_rf)
+# summary(rf_model)
+# # Predictions
+# rf_predictions <- predict(rf_model, test_data)
+# 
+# actual <- test_data$status_oh
+# roc_random_forrest = rocit(rf_predictions, actual)
+# plot(roc_random_forrest)
+# cutoff_index <- which.max(roc_random_forrest$TPR + (1 - roc_random_forrest$FPR) - 1)
+# optimal_cutoff <- roc_random_forrest$Cutoff[cutoff_index]
+# optimal_cutoff
+# 
+# predicted_class_randomm_forrest <- ifelse(rf_predictions >= optimal_cutoff, 1, 0)
+# 
+# 
+# # Confusion matrix
+# confusionMatrix(as.factor(predicted_class_randomm_forrest), as.factor(test_data$status_oh))
 
 ```
 
@@ -789,19 +789,19 @@ summary(nb_model)
 # Predictions
 nb_predictions <- predict(nb_model, newdata = test_data, type = "raw")
 
-# ROC analysis
-library(pROC)
-roc <- roc(test_data$status_oh, nb_predictions[, "1"])
-plot(roc)
+actual <- test_data$status_oh
+
+roc_nb = rocit(nb_predictions[, 2], actual)
+plot(roc_nb)
 
 # Calculate optimal cutoff
-cutoff_index <- which.max(roc$specificities + roc$sensitivities - 1)
-optimal_cutoff <- roc$thresholds[cutoff_index]
+cutoff_index <- which.max(roc_nb$TPR - roc_nb$FPR)
+optimal_cutoff <- roc_nb$Cutoff[cutoff_index]
 
 # Predicted class based on optimal cutoff
-predicted_class <- ifelse(nb_predictions[, "1"] >= optimal_cutoff, 1, 0)
+predicted_class_nb <- ifelse(nb_predictions[, 2] >= optimal_cutoff, 1, 0)
 
 # Confusion matrix
-confusionMatrix(as.factor(predicted_class), as.factor(test_data$status_oh))
+confusionMatrix(as.factor(predicted_class_nb), as.factor(test_data$status_oh))
 
 ```
