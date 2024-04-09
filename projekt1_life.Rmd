@@ -671,24 +671,6 @@ Model SVM-linear má najvyššiu špecificitu (0,962), čo naznačuje, že efekt
 Model Random Forest dosahuje konkurenčný výkon vo všetkých metrikách.
 
 
-## ROC analýza
-```{r}
-
-# plot also ROC curves, younden index values into tables
-data.frame(
-  Model = c("LDA", "SVM-linear","SVM-radial", "Naive Bayes", "Random Forest"),
-  Youden_Index = c(
-    max(roc_lda$sensitivities + roc_lda$specificities - 1),
-    max(roc_svm_ln$sensitivities + roc_svm_ln$specificities - 1),
-    max(roc_svm_rad$sensitivities + roc_svm_rad$specificities - 1),
-    max(roc_nb$sensitivities + roc_nb$specificities - 1),
-    max(roc_random_forrest$sensitivities + roc_random_forrest$specificities - 1)
-  )
-)
-
-```
-
-
 ### Všetky prediktory
 
 ```{r}
