@@ -2,7 +2,9 @@
 title: "OZNAL projekt 1"
 author: "Peter Slovák, Pavol Hradský"
 date: "2024-03-26"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -563,6 +565,7 @@ nrow(na.omit(train_data))
 train_data_rf = na.omit(train_data)
 
 ```
+
 # Random Forest metóda
 ```{r}
 #install.packages("randomForest")
@@ -624,14 +627,16 @@ Accuracy je 86,24%. Podobne ako pri SVM-radial metóde.
 
 ## Model performance parameters v 1 tabuľke
 ```{r}
+library(pROC)
 
 # factor conversion 
 test_data$status_oh <- as.factor(test_data$status_oh)
 
 # Calculate performance metrics
 data.frame(
-  Model = c("LDA", "SVM-linear","SVM-radial", "Naive Bayes", "Random Forest"),
+  Model = c("GLM","LDA", "SVM-linear","SVM-radial", "Naive Bayes", "Random Forest"),
   Accuracy = c(
+    confusionMatrix(as.factor(predicted_class), test_data$status_oh)$overall["Accuracy"],
     confusionMatrix(as.factor(predicted_class_lda), test_data$status_oh)$overall["Accuracy"],
     confusionMatrix(as.factor(predicted_class_svm_ln), test_data$status_oh)$overall["Accuracy"],
     confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$overall["Accuracy"],
@@ -639,6 +644,7 @@ data.frame(
     confusionMatrix(as.factor(predicted_class_randomm_forrest), test_data$status_oh)$overall["Accuracy"]
   ),
   Sensitivity = c(
+    confusionMatrix(as.factor(predicted_class), test_data$status_oh)$byClass["Sensitivity"],
     confusionMatrix(as.factor(predicted_class_lda), test_data$status_oh)$byClass["Sensitivity"],
     confusionMatrix(as.factor(predicted_class_svm_ln), test_data$status_oh)$byClass["Sensitivity"],
     confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$byClass["Sensitivity"],
@@ -646,6 +652,7 @@ data.frame(
     confusionMatrix(as.factor(predicted_class_randomm_forrest), test_data$status_oh)$byClass["Sensitivity"]
   ),
   Specificity = c(
+    confusionMatrix(as.factor(predicted_class), test_data$status_oh)$byClass["Specificity"],
     confusionMatrix(as.factor(predicted_class_lda), test_data$status_oh)$byClass["Specificity"],
     confusionMatrix(as.factor(predicted_class_svm_ln), test_data$status_oh)$byClass["Specificity"],
     confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$byClass["Specificity"],
@@ -653,11 +660,20 @@ data.frame(
     confusionMatrix(as.factor(predicted_class_randomm_forrest), test_data$status_oh)$byClass["Specificity"]
   ),
   F1_Score = c(
+    confusionMatrix(as.factor(predicted_class), test_data$status_oh)$byClass["F1"],
     confusionMatrix(as.factor(predicted_class_lda), test_data$status_oh)$byClass["F1"],
     confusionMatrix(as.factor(predicted_class_svm_ln), test_data$status_oh)$byClass["F1"],
     confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$byClass["F1"],
     confusionMatrix(as.factor(predicted_class_nb), test_data$status_oh)$byClass["F1"],
     confusionMatrix(as.factor(predicted_class_randomm_forrest), test_data$status_oh)$byClass["F1"]
+  ),
+  AUC_ROC = c(
+    roc(test_data$status_oh, as.numeric(predicted_class))$auc,
+    roc(test_data$status_oh, as.numeric(predicted_class_lda))$auc,
+    roc(test_data$status_oh, as.numeric(predicted_class_svm_ln))$auc,
+    roc(test_data$status_oh, as.numeric(predicted_class_svm_rad))$auc,
+    roc(test_data$status_oh, as.numeric(predicted_class_nb))$auc,
+    roc(test_data$status_oh, as.numeric(predicted_class_randomm_forrest))$auc
   )
 )
 
