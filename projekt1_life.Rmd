@@ -416,6 +416,36 @@ Hviezdičky pred hodnotami p-value znamenaju, že sä signifikantné.
 
 Náš **response** variable bude **"status_oh"** a ostatné stĺpce **(GDP, Schooling)** budú **prediktory**.
 
+Pokus:
+
+```{r}
+set.seed(123)
+ 
+data$status_oh <- as.factor(data$status_oh)
+
+train_control <- trainControl(method = "cv", 
+                              number = 10)
+ 
+ 
+data <- na.omit(data)
+
+model <- train(status_oh ~ Schooling + GDP, data = data, 
+               trControl = train_control, 
+               method = "nb")
+
+print(model)
+
+```
+
+
+```{r}
+data %$% pairs( status_oh ~  GDP + Schooling)
+```
+
+```{r}
+data %$% pairs( status_oh ~  log(GDP) + Schooling)
+```
+
 ```{r}
 # model
 model = glm(status_oh ~ GDP + Schooling, data = train_data)
@@ -538,14 +568,11 @@ actual <- test_data$status_oh
 roc_nb = rocit(nb_predictions[, 2], actual)
 plot(roc_nb)
 
-# Calculate optimal cutoff
 cutoff_index <- which.max(roc_nb$TPR - roc_nb$FPR)
 optimal_cutoff <- roc_nb$Cutoff[cutoff_index]
 
-# Predicted class based on optimal cutoff
 predicted_class_nb <- ifelse(nb_predictions[, 2] >= optimal_cutoff, 1, 0)
 
-# Confusion matrix
 confusionMatrix(as.factor(predicted_class_nb), as.factor(test_data$status_oh))
 
 ```
@@ -565,6 +592,7 @@ nrow(na.omit(train_data))
 train_data_rf = na.omit(train_data)
 
 ```
+
 
 # Random Forest metóda
 ```{r}
@@ -587,7 +615,6 @@ optimal_cutoff
 predicted_class_randomm_forrest <- ifelse(rf_predictions >= optimal_cutoff, 1, 0)
 
 
-# Confusion matrix
 confusionMatrix(as.factor(predicted_class_randomm_forrest), as.factor(test_data$status_oh))
 
 ```
@@ -611,14 +638,11 @@ actual <- test_data$status_oh
 roc_lda = rocit(lda_predictions, actual)
 plot(roc_lda)
 
-# Calculate optimal cutoff
 cutoff_index <- which.max(roc_lda$TPR - roc_lda$FPR)
 optimal_cutoff <- roc_lda$Cutoff[cutoff_index]
 
-# Predicted class based on optimal cutoff
 predicted_class_lda <- ifelse(lda_predictions >= optimal_cutoff, 1, 0)
 
-# Confusion matrix
 confusionMatrix(as.factor(predicted_class_lda), as.factor(test_data$status_oh))
 
 ```
@@ -629,7 +653,6 @@ Accuracy je 86,24%. Podobne ako pri SVM-radial metóde.
 ```{r}
 library(pROC)
 
-# factor conversion 
 test_data$status_oh <- as.factor(test_data$status_oh)
 
 # Calculate performance metrics
@@ -687,20 +710,18 @@ Model SVM-linear má najvyššiu špecificitu (0,962), čo naznačuje, že efekt
 Model Random Forest dosahuje konkurenčný výkon vo všetkých metrikách.
 
 
-### Všetky prediktory
+### Logaritmovany GDP
 
 ```{r}
 # model
-model = glm(status_oh ~ `Life expectancy` + `Adult Mortality` + Alcohol  +
-              `percentage expenditure` + BMI + 
-              `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
-              `Income composition of resources` +
-              Schooling, data = train_data)
+model = glm(status_oh ~ log(GDP) + Schooling, data = train_data)
 summary(model)
 
 predictions <- predict(model, test_data)
 
 actual <- test_data$status_oh
+
+# výpočet cut off hodnoty, ktorý naznačuje optimálny bod pre prahovu hodnotu, ktorá rozdeľuje predikcie na pozitívne a negatívne, čiže rozvojovú a rozvinutú krajinu.
 
 roc = rocit(predictions, actual)
 plot(roc)
@@ -710,78 +731,95 @@ optimal_cutoff
 
 predicted_class <- ifelse(predictions >= optimal_cutoff, 1, 0)
 
-# onfussion matrix
-confusionMatrix(as.factor(predicted_class), as.factor(actual), positive = "1")
+# confussion matrix
+caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive = "1")
 
 ```
 
-Z confussion matrix vidíme, že náš model má **91,27%** presnosť. 
 
-# Radial SVM
 
+```{r}
+data %>%
+  ggplot(., aes(x = Schooling, y = status_oh)) +  # Specify X and Y variables
+  geom_point(position = position_jitter(width = 0.3, height = 0.06), 
+             alpha = 0.05, 
+             shape = 1, 
+             size = 1.5) + 
+  stat_smooth(method = glm, method.args = list(family = binomial)) +
+  ggtitle("Schooling vs status_oh")
+```
+
+```{r}
+data %>%
+  ggplot(., aes(x = log(GDP), y = status_oh)) +  # Specify X and Y variables
+  geom_point(position = position_jitter(width = 0.3, height = 0.06), 
+             alpha = 0.05, 
+             shape = 1, 
+             size = 1.5) + 
+  stat_smooth(method = glm, method.args = list(family = binomial)) +
+  ggtitle("GDP vs status_oh")
+```
+
+
+
+# Radial SVM metóda
 ```{r}
 
 library(e1071)
 
 # Model
-svm_model <- svm(status_oh ~ `Life expectancy` + `Adult Mortality` + Alcohol  +
-              `percentage expenditure` + BMI + 
-              `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
-              `Income composition of resources` + Schooling, data = train_data, kernel = "radial")
+svm_model <- svm(status_oh ~ log(GDP) + Schooling, data = train_data, kernel = "radial")
 summary(svm_model)
 # Predictions
 svm_predictions <- predict(svm_model, test_data)
 
 actual <- test_data$status_oh
-roc = rocit(svm_predictions, actual)
-plot(roc)
-cutoff_index <- which.max(roc$TPR + (1 - roc$FPR) - 1)
-optimal_cutoff <- roc$Cutoff[cutoff_index]
+roc_svm_rad = rocit(svm_predictions, actual)
+plot(roc_svm_rad)
+cutoff_index <- which.max(roc_svm_rad$TPR + (1 - roc_svm_rad$FPR) - 1)
+optimal_cutoff <- roc_svm_rad$Cutoff[cutoff_index]
 optimal_cutoff
 
-predicted_class <- ifelse(svm_predictions >= optimal_cutoff, 1, 0)
+predicted_class_svm_rad <- ifelse(svm_predictions >= optimal_cutoff, 1, 0)
 
 # Confusion matrix
-confusionMatrix(as.factor(predicted_class), as.factor(test_data$status_oh))
+confusionMatrix(as.factor(predicted_class_svm_rad), as.factor(test_data$status_oh))
 
 ```
 
 
-
-```{r}
-# library(randomForest)
-# # Model
-# rf_model <- randomForest(status_oh ~ train_data_rf$`Life expectancy` + train_data_rf$`Adult # Mortality` + train_data_rf$Alcohol  +
-#               train_data_rf$`percentage expenditure` + train_data_rf$BMI + 
-#               train_data_rf$`Total expenditure` + train_data_rf$Diphtheria + # train_data_rf$`HIV/AIDS` + train_data_rf$GDP +
-#               train_data_rf$`Income composition of resources` + train_data_rf$Schooling, data = # train_data_rf)
-# summary(rf_model)
-# # Predictions
-# rf_predictions <- predict(rf_model, test_data)
-# 
-# actual <- test_data$status_oh
-# roc_random_forrest = rocit(rf_predictions, actual)
-# plot(roc_random_forrest)
-# cutoff_index <- which.max(roc_random_forrest$TPR + (1 - roc_random_forrest$FPR) - 1)
-# optimal_cutoff <- roc_random_forrest$Cutoff[cutoff_index]
-# optimal_cutoff
-# 
-# predicted_class_randomm_forrest <- ifelse(rf_predictions >= optimal_cutoff, 1, 0)
-# 
-# 
-# # Confusion matrix
-# confusionMatrix(as.factor(predicted_class_randomm_forrest), as.factor(test_data$status_oh))
-
-```
-
-# Naive Bayes
+# Linear SVM metóda
 ```{r}
 
 # Model
-nb_model <- naiveBayes(status_oh ~ `Life expectancy` + `Adult Mortality` + Alcohol  +
-              `percentage expenditure` + BMI + 
-              `Total expenditure` + Diphtheria + `HIV/AIDS` + GDP +
-              `Income composition of resources` + Schooling, data = train_data)
+svm_model <- svm(status_oh ~ log(GDP) + Schooling, data = train_data, kernel = "linear")
+summary(svm_model)
+# Predictions
+svm_predictions <- predict(svm_model, test_data)
+
+actual <- test_data$status_oh
+
+roc_svm_ln = rocit(svm_predictions, actual)
+plot(roc_svm_ln)
+cutoff_index <- which.max(roc_svm_ln$TPR + (1 - roc_svm_ln$FPR) - 1)
+optimal_cutoff <- roc_svm_ln$Cutoff[cutoff_index]
+optimal_cutoff
+
+predicted_class_svm_ln <- ifelse(svm_predictions >= optimal_cutoff, 1, 0)
+
+# Confusion matrix
+confusionMatrix(as.factor(predicted_class_svm_ln), as.factor(test_data$status_oh))
+
+#predicted <- predict(svm_model,data)
+#confusionMatrix(table(predicted, data$status_oh))
+```
+
+
+# Naive Bayes metóda
+```{r}
+
+# Model
+nb_model <- naiveBayes(status_oh ~ log(GDP) + Schooling, data = train_data)
 summary(nb_model)
 
 # Predictions
@@ -792,14 +830,114 @@ actual <- test_data$status_oh
 roc_nb = rocit(nb_predictions[, 2], actual)
 plot(roc_nb)
 
-# Calculate optimal cutoff
 cutoff_index <- which.max(roc_nb$TPR - roc_nb$FPR)
 optimal_cutoff <- roc_nb$Cutoff[cutoff_index]
 
-# Predicted class based on optimal cutoff
 predicted_class_nb <- ifelse(nb_predictions[, 2] >= optimal_cutoff, 1, 0)
 
-# Confusion matrix
 confusionMatrix(as.factor(predicted_class_nb), as.factor(test_data$status_oh))
+
+```
+
+
+
+## Random Forest ma problemy s chybajucimi hodnotammi v train_data, mozem ich omitnut
+### gives me number of missing values in each column
+```{r}
+sapply(train_data, function(x) sum(is.na(x))) # chybajuce hodnoty v stlpcoch
+
+```
+```{r}
+# count na data which will be omitted
+
+nrow(na.omit(train_data))
+train_data_rf = na.omit(train_data)
+
+```
+
+
+
+
+# LDA metóda
+```{r}
+library(MASS)
+
+# Model
+lda_model <- lda(status_oh ~ log(GDP) + Schooling, data = train_data)
+summary(lda_model)
+
+# Predictions
+
+lda_predictions <- predict(lda_model, newdata = test_data)$posterior[, "1"]
+
+actual <- test_data$status_oh
+
+roc_lda = rocit(lda_predictions, actual)
+plot(roc_lda)
+
+cutoff_index <- which.max(roc_lda$TPR - roc_lda$FPR)
+optimal_cutoff <- roc_lda$Cutoff[cutoff_index]
+
+predicted_class_lda <- ifelse(lda_predictions >= optimal_cutoff, 1, 0)
+
+confusionMatrix(as.factor(predicted_class_lda), as.factor(test_data$status_oh))
+
+```
+
+
+
+## Model performance parameters v 1 tabuľke
+```{r}
+library(pROC)
+
+test_data$status_oh <- as.factor(test_data$status_oh)
+
+# Calculate performance metrics
+data.frame(
+  Model = c("GLM","LDA", "SVM-linear","SVM-radial", "Naive Bayes"),
+  Accuracy = c(
+    confusionMatrix(as.factor(predicted_class), test_data$status_oh)$overall["Accuracy"],
+    confusionMatrix(as.factor(predicted_class_lda), test_data$status_oh)$overall["Accuracy"],
+    confusionMatrix(as.factor(predicted_class_svm_ln), test_data$status_oh)$overall["Accuracy"],
+    confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$overall["Accuracy"],
+    confusionMatrix(as.factor(predicted_class_nb), test_data$status_oh)$overall["Accuracy"]
+  ),
+  Sensitivity = c(
+    confusionMatrix(as.factor(predicted_class), test_data$status_oh)$byClass["Sensitivity"],
+    confusionMatrix(as.factor(predicted_class_lda), test_data$status_oh)$byClass["Sensitivity"],
+    confusionMatrix(as.factor(predicted_class_svm_ln), test_data$status_oh)$byClass["Sensitivity"],
+    confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$byClass["Sensitivity"],
+    confusionMatrix(as.factor(predicted_class_nb), test_data$status_oh)$byClass["Sensitivity"]
+  ),
+  Specificity = c(
+    confusionMatrix(as.factor(predicted_class), test_data$status_oh)$byClass["Specificity"],
+    confusionMatrix(as.factor(predicted_class_lda), test_data$status_oh)$byClass["Specificity"],
+    confusionMatrix(as.factor(predicted_class_svm_ln), test_data$status_oh)$byClass["Specificity"],
+    confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$byClass["Specificity"],
+    confusionMatrix(as.factor(predicted_class_nb), test_data$status_oh)$byClass["Specificity"]
+  ),
+  F1_Score = c(
+    confusionMatrix(as.factor(predicted_class), test_data$status_oh)$byClass["F1"],
+    confusionMatrix(as.factor(predicted_class_lda), test_data$status_oh)$byClass["F1"],
+    confusionMatrix(as.factor(predicted_class_svm_ln), test_data$status_oh)$byClass["F1"],
+    confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$byClass["F1"],
+    confusionMatrix(as.factor(predicted_class_nb), test_data$status_oh)$byClass["F1"]
+  ),
+  AUC_ROC = c(
+    roc(test_data$status_oh, as.numeric(predicted_class))$auc,
+    roc(test_data$status_oh, as.numeric(predicted_class_lda))$auc,
+    roc(test_data$status_oh, as.numeric(predicted_class_svm_ln))$auc,
+    roc(test_data$status_oh, as.numeric(predicted_class_svm_rad))$auc,
+    roc(test_data$status_oh, as.numeric(predicted_class_nb))$auc
+  )
+)
+
+
+```
+
+### Menežérske zhrnutie
+```{r}
+
+
 
 ```
