@@ -203,6 +203,26 @@ pairs(~ `Life expectancy` + `Adult Mortality` + Alcohol  +
       lower.panel = panel.lm)
 ```
 
+## Korelačná tabuľka
+
+```{r}
+options(repos = c(CRAN = "https://cran.rstudio.com"))
+install.packages("corrplot")
+library(corrplot)
+# plot with removed na values
+
+cor(data %>% select(`Life expectancy`, `Adult Mortality`, Alcohol, 
+                    `percentage expenditure`, BMI, `Total expenditure`, 
+                    Diphtheria, `HIV/AIDS`, GDP, `Income composition of resources`, 
+                    Schooling), method = "pearson", use = "pairwise.complete.obs")
+  
+corrplot(cor(data %>% select(`Life expectancy`, `Adult Mortality`, Alcohol, 
+                    `percentage expenditure`, BMI, `Total expenditure`, 
+                    Diphtheria, `HIV/AIDS`, GDP, `Income composition of resources`, 
+                    Schooling), method = "pearson", use = "pairwise.complete.obs"))
+
+```
+
 Vybrali sme len stĺpce, ktoré najviac korelujú so stĺpcom **Life expectancy**, ktorý sa budeme snažiť **predikovať**. 
 
 # One hot encode status pre klasifikáciu
