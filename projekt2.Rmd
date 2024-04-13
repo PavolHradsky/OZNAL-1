@@ -224,9 +224,9 @@ corrplot(cor(data %>% select(`Life expectancy`, `Adult Mortality`, Alcohol,
 
 ```
 
-Vybrali sme len stĺpce, ktoré najviac korelujú so stĺpcom **Life expectancy**, ktorý sa budeme snažiť **predikovať**. 
+Vybrali sme len stĺpce, ktoré najviac korelujú a to **GDP** a **percentage expenditure**, ktoré sa budeme snažiť **predikovať** vzhľadom na status rozvinutosti krajiny. 
 
-# One hot encode status pre klasifikáciu
+# One hot encode status rozvinutosti krajiny pre klasifikáciu
 ```{r}
 data %<>% 
   mutate(status_oh = if_else(Status=='Developed', 1, 0)) %>%
@@ -291,7 +291,7 @@ test_data %<>%
 #### H0 1. GDP a percentage expenditure nesuvisia s tým, či je krajina rozvojová alebo rozvinutá.
 
 
-K-fold cross validácia aplikovaná na klasifikáciu, kde **response** variable bude **"status_oh"** a ostatné stĺpce **(GDP, Schooling)** budú **prediktory**. Použitý naive bayes model. #TODO poskusat aj ine a porovnat vyseldky vez tohoto K-fold??
+K-fold cross validácia aplikovaná na klasifikáciu, kde **response** variable bude **"status_oh"** a ostatné stĺpce **(GDP, Schooling)** budú **prediktory**. Použitý naive bayes model. 
 
 ```{r}
 set.seed(123)
@@ -318,7 +318,7 @@ data %$% pairs( status_oh ~  `percentage expenditure` + GDP)
 ```
 
 
-1. experiment: Náš **response** variable bude **"status_oh"** a ostatné stĺpce **(GDP, Schooling)** budú **prediktory**.
+### 1. experiment: Náš **response** variable bude **"status_oh"** a ostatné stĺpce **(GDP, Schooling)** budú **prediktory**.
 
 ```{r}
 data %$% pairs( status_oh ~  GDP + Schooling)
@@ -592,7 +592,7 @@ Model SVM-linear má najvyššiu špecificitu (0,962), čo naznačuje, že efekt
 Model Random Forest dosahuje konkurenčný výkon vo všetkých metrikách.
 
 
-### Logaritmovaný GDP - 2. experiment
+### 2. experiment: podobne ako 1.experiment, no máme zlogaritmovaný GDP  
 
 ```{r}
 train_data %<>%
@@ -801,7 +801,7 @@ data.frame(
 
 ```
 
-3.experiment: GPD a percentage expenditure
+### 3.experiment: GPD a percentage expenditure ako prediktory
 
 ```{r}
 # model
@@ -1008,15 +1008,46 @@ data.frame(
 
 ```
 
+# hyperparameter tuning for SVM radial kernel , predictors GDP and percentage expenditure
 
+```{r}
+install.packages("kernlab")
+
+set.seed(123)
+# one-hot encoding column status
+data$status_oh <- as.factor(data$status_oh)
+
+train_control <- trainControl(method = "cv", 
+                              number = 10)
+
+#model
+model <- train(status_oh ~ GDP + `percentage expenditure`, data = data %>% drop_na(), 
+               trControl = train_control, 
+               method = "svmRadial")
+
+print(model)
+
+svm_predictions <- predict(model, test_data)
+svm_scores <- as.numeric(svm_predictions)
+
+actual <- test_data$status_oh
+roc_svm_rad = rocit(svm_scores, actual)
+cutoff_index <- which.max(roc_svm_rad$TPR + (1 - roc_svm_rad$FPR) - 1)
+optimal_cutoff <- roc_svm_rad$Cutoff[cutoff_index]
+predicted_class_svm_rad <- ifelse(svm_scores >= optimal_cutoff, 1, 0)
+
+confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$byClass["Specificity"]
+
+
+```
 
 ### Menežérske zhrnutie
 
-Testovali sme 5 (resp 6) roznych modelov na troch roznych kombinaciach parametrov.
+Testovali sme 5 (resp 6) rôznych modelov na troch rôznych kombináciach parametrov.
 
-V prvom experimente, kde sme predikovali status_oh pomocou GDP a schooling, nam ako najlepsi model vysiel SVM s radial kernelom s accuracy 86%. To je oproti SVM s linearnym kernelom zlepsenie o takmer 30%. Je to preto, ze GDP a schooling nie su linearne zavisle.
+V prvom experimente, kde sme predikovali status_oh pomocou GDP a Schooling, nám ako najlepší model vyšiel SVM s radial kernelom s accuracy 86%. To je oproti SVM s linearnym kernelom zlepšenie o takmer 30%. Je to preto, že GDP a Schooling nie su lineárne závislé, čo sme mali možnosť vidieť aj na pairplote.
 
-V druhom experimente sme robili model na rovnakych premennych, ale GDP sme zlogaritmovali. Tu mal najlepsi vysledok Naive Bayes model, s accuracy 85%. SVM s radialnym kernelom mal 84% a oproti predoslemu experimentu, SVM s linearnym kernelom mal az 82%, co je omnoho viac ako v predoslom. To znamena, ze zlogaritmovanie premennej zmenilo exponencialnu zavislost na linearnu, a tym padom sme zdvihli uspesnost SVM s linearnym kernelom.
+V druhom experimente sme vytvorili modely na rovnakých premenných, ale GDP sme zlogaritmovali, s cieľom zlepšiť výsledky pre SVM linear kernel. Tu mal najlepší výsledok Naive Bayes model, s accuracy 85%. SVM s radiálnym kernelom mal 84%, SVM s lineárnym kernelom mal až 82% accuracy, čo je omnoho viac ako v predošlom experimente. To znamená, že zlogaritmovanie premennej zmenilo exponenciálnu závislosť na lineárnu, a tým pádom sme zdvihli úspešnosť SVM s lineárnym kernelom.
 
-V poslednom experimente sme znovu predikovali status_oh, tentokrat na zaklade GDP a percentage expenditure. Tu nam znovu vysiel ako najlepsi model SVM s radialnym kernelom s accuracy 85%. Zaujimave ale je, ze specificity ma omnoho nizsiu ako ostatne modely - 62%, pricom ostatne maju okolo 80%. To znamena, ze ak nam zalezi na minimalizovani falosne negativnych pripadov, mali by sme radsej zvolit iny model.
+V poslednom experimente sme znovu predikovali status_oh, tentokrát na základe GDP a percentage expenditure. Tu nám znovu vyšiel ako najlepší model SVM s radiálnym kernelom s accuracy 85%. Zaujímavé ale je, že specificity má omnoho nižšiu ako ostatné modely - 62%, pričom ostatné majú okolo 80%. To znamená, že ak nám záleží na minimalizovaní falošne negatívnych prípadov, mali by sme v tomto prípade, pri tejto kombinácii prediktorov, radšej zvoliť iný model ako SVM s radiálnym kernelom. Vyskúšali sme preto aj hyperparameter tuning pre tento model, kde model s najvyšším accuracy bol vybratý a výsledok pre specificity sa nezlepšil.
 
