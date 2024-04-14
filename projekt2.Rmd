@@ -6,7 +6,7 @@ output:
   html_document: default
   pdf_document: default
 ---
-# Regresia bola odstránená z dôvodu prehľadnosti.
+# Regresia bola odstránená z dôvodu prehľadnosti, EDA bola ponechaná a rozšírená.
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE) # do not show warnings
 library(tidyverse)
@@ -215,16 +215,16 @@ library(corrplot)
 cor(data %>% select(`Life expectancy`, `Adult Mortality`, Alcohol, 
                     `percentage expenditure`, BMI, `Total expenditure`, 
                     Diphtheria, `HIV/AIDS`, GDP, `Income composition of resources`, 
-                    Schooling), method = "pearson", use = "pairwise.complete.obs")
+                    Schooling), method = "pearson", use = "pairwise.complete.obs") # deals with na values
   
 corrplot(cor(data %>% select(`Life expectancy`, `Adult Mortality`, Alcohol, 
                     `percentage expenditure`, BMI, `Total expenditure`, 
                     Diphtheria, `HIV/AIDS`, GDP, `Income composition of resources`, 
-                    Schooling), method = "pearson", use = "pairwise.complete.obs"))
+                    Schooling), method = "pearson", use = "pairwise.complete.obs")) # deals with na values
 
 ```
 
-Vybrali sme len stĺpce, ktoré najviac korelujú a to **GDP** a **percentage expenditure**, ktoré sa budeme snažiť **predikovať** vzhľadom na status rozvinutosti krajiny. 
+Pre 1 z experimentov sme vybrali len tie stĺpce, ktoré najviac korelujú a to **GDP** a **percentage expenditure**, ktoré sa budeme snažiť **predikovať** vzhľadom na status rozvinutosti krajiny. 
 
 # One hot encode status rozvinutosti krajiny pre klasifikáciu
 ```{r}
