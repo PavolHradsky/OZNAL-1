@@ -385,7 +385,9 @@ confusionMatrix(as.factor(predicted_class_svm_rad), as.factor(test_data$status_o
 
 ```
 
-Accuracy je 86,24%. H0 zamietame.
+Accuracy je 86,24%. H0 zamietame. Hodnota kappa 0.5833 naznačuje strednú až dobrú zhodu medzi pozorovaniami a predpovedaniami modelu.
+eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried. 
+
 
 # Linear SVM metóda
 ```{r}
@@ -409,11 +411,10 @@ predicted_class_svm_ln <- ifelse(svm_predictions >= optimal_cutoff, 1, 0)
 # Confusion matrix
 confusionMatrix(as.factor(predicted_class_svm_ln), as.factor(test_data$status_oh))
 
-#predicted <- predict(svm_model,data)
-#confusionMatrix(table(predicted, data$status_oh))
 ```
 
 Accuracy je 66,38%. H0 zamietame.
+eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried. 
 
 # Naive Bayes metóda
 ```{r}
@@ -440,7 +441,7 @@ confusionMatrix(as.factor(predicted_class_nb), as.factor(test_data$status_oh))
 ```
 
 Accuracy je 81,66%. H0 zamietame.
-
+mean - ([,1]) a standard deviation - ([,2]) pre každú triedu (0 and 1).
 
 # Random Forest metóda
 
@@ -508,7 +509,7 @@ confusionMatrix(as.factor(predicted_class_lda), as.factor(test_data$status_oh))
 
 ```
 
-Accuracy je 86,24%. Podobne ako pri SVM-radial metóde. H0 zamietame.
+Accuracy je 86,24%. Podobne ako pri SVM-radial metóde. H0 zamietame. 
 
 ## Model performance parameters v 1 tabuľke pre 1. experiment:
 ```{r}
@@ -602,6 +603,7 @@ predicted_class <- ifelse(predictions >= optimal_cutoff, 1, 0)
 caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive = "1")
 
 ```
+
 Accuracy: 78%.  H0 zamietame.
 
 
@@ -624,7 +626,7 @@ data %>%
              shape = 1, 
              size = 1.5) + 
   stat_smooth(method = glm, method.args = list(family = binomial)) +
-  ggtitle("GDP vs status_oh")
+  ggtitle(" log GDP vs status_oh")
 ```
 
 
@@ -653,7 +655,9 @@ predicted_class_svm_rad <- ifelse(svm_predictions >= optimal_cutoff, 1, 0)
 confusionMatrix(as.factor(predicted_class_svm_rad), as.factor(test_data$status_oh))
 
 ```
+
 Accuracy: 84%. H0 zamietame.
+eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried.
 
 # Linear SVM metóda
 ```{r}
@@ -678,7 +682,9 @@ predicted_class_svm_ln <- ifelse(svm_predictions >= optimal_cutoff, 1, 0)
 confusionMatrix(as.factor(predicted_class_svm_ln), as.factor(test_data$status_oh))
 
 ```
+
 Accuracy 83%. H0 zamietame.
+eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried.
 
 # Naive Bayes metóda
 ```{r}
@@ -703,7 +709,9 @@ predicted_class_nb <- ifelse(nb_predictions[, 2] >= optimal_cutoff, 1, 0)
 confusionMatrix(as.factor(predicted_class_nb), as.factor(test_data$status_oh))
 
 ```
+
 Accuracy: 85%.  H0 zamietame.
+mean - ([,1]) a standard deviation - ([,2]) pre každú triedu (0 and 1).
 
 # Random Forest metóda
 
@@ -770,6 +778,7 @@ confusionMatrix(as.factor(predicted_class_lda), as.factor(test_data$status_oh))
 
 ```
 
+Accuracy je 79,91%. H0 zamietame.
 
 ## Model performance parameters v 1 tabuľke pre 2. experiment:
 ```{r}
@@ -854,7 +863,8 @@ predicted_class <- ifelse(predictions >= optimal_cutoff, 1, 0)
 caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive = "1")
 
 ```
- Accuracy: 73%. H0 zamietame.
+ 
+Accuracy: 73%. H0 zamietame.
  
 
 ```{r}
@@ -904,7 +914,9 @@ predicted_class_svm_rad <- ifelse(svm_predictions >= optimal_cutoff, 1, 0)
 confusionMatrix(as.factor(predicted_class_svm_rad), as.factor(test_data$status_oh))
 
 ```
+
 Accuracy: 85%. H0 zamietame.
+eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried.
 
 
 # Linear SVM metóda
@@ -932,8 +944,9 @@ confusionMatrix(as.factor(predicted_class_svm_ln), as.factor(test_data$status_oh
 #predicted <- predict(svm_model,data)
 #confusionMatrix(table(predicted, data$status_oh))
 ```
-Accuracy: 75%.  H0 zamietame.
 
+Accuracy: 75%.  H0 zamietame.
+eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried.
 
 # Naive Bayes metóda
 ```{r}
@@ -958,7 +971,9 @@ predicted_class_nb <- ifelse(nb_predictions[, 2] >= optimal_cutoff, 1, 0)
 confusionMatrix(as.factor(predicted_class_nb), as.factor(test_data$status_oh))
 
 ```
+
 Accuracy: 75%. H0 zamietame.
+mean - ([,1]) a standard deviation - ([,2]) pre každú triedu (0 and 1).
 
 
 # LDA metóda
@@ -984,6 +999,7 @@ predicted_class_lda <- ifelse(lda_predictions >= optimal_cutoff, 1, 0)
 confusionMatrix(as.factor(predicted_class_lda), as.factor(test_data$status_oh))
 
 ```
+
 Accuracy: 73%.  H0 zamietame.
 
 
@@ -1054,8 +1070,8 @@ data$status_oh <- as.factor(data$status_oh)
 train_control <- trainControl(method = "cv", 
                               number = 10)
 
-tuning_grid <- expand.grid(sigma = seq(0.1, 1, by = 0.1),
-                           C = 2^(-2:2))
+tuning_grid <- expand.grid(sigma = seq(0.1, 1, by = 0.1), C = 2^(-2:2))
+
 #model
 model <- train(status_oh ~ GDP + `percentage expenditure`, data = data %>% drop_na(), 
                trControl = train_control, 
