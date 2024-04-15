@@ -226,11 +226,24 @@ corrplot(cor(data %>% select(`Life expectancy`, `Adult Mortality`, Alcohol,
 
 Pre 1 z experimentov sme vybrali len tie stĺpce, ktoré najviac korelujú a to **GDP** a **percentage expenditure**, ktoré sa budeme snažiť **predikovať** vzhľadom na status rozvinutosti krajiny. 
 
+Drop NA rows pre použité stĺpce v modeli, kvôli prevencii proti odstráneniu počas predikcii:
+```{r}
+library(conflicted)
+data %<>% 
+  dplyr::select(Status, `Life expectancy`, `Adult Mortality`, Alcohol, 
+         `percentage expenditure`, BMI, `Total expenditure`, 
+         Diphtheria, `HIV/AIDS`, GDP, `Income composition of resources`, 
+         Schooling) %>%
+  drop_na()
+
+```
+
 # One hot encode status rozvinutosti krajiny pre klasifikáciu
 ```{r}
 data %<>% 
   mutate(status_oh = if_else(Status=='Developed', 1, 0)) %>%
   relocate(status_oh)
+  
 ```
 
 # Rozdelenie dát na trénovacie a testovacie
@@ -261,24 +274,6 @@ test_data %>%
   ggplot(aes(x=Status, y=Count)) + 
   geom_histogram(stat="identity", aes(fill=Count)) + 
   scale_fill_viridis_c()
-```
-
-Drop NA rows pre použité stĺpce v modeli, kvôli prevencii proti odstráneniu počas predikcii:
-```{r}
-library(conflicted)
-
-train_data %>% 
-  dplyr::select(status_oh, `Life expectancy`, `Adult Mortality`, Alcohol, 
-         `percentage expenditure`, BMI, `Total expenditure`, 
-         Diphtheria, `HIV/AIDS`, GDP, `Income composition of resources`, 
-         Schooling) %>%
-  drop_na()
-test_data %<>% 
-  dplyr::select(status_oh, `Life expectancy`, `Adult Mortality`, Alcohol, 
-         `percentage expenditure`, BMI, `Total expenditure`, 
-         Diphtheria, `HIV/AIDS`, GDP, `Income composition of resources`, 
-         Schooling) %>%
-  drop_na()
 ```
 
 # Experimenty
@@ -445,24 +440,13 @@ mean - ([,1]) a standard deviation - ([,2]) pre každú triedu (0 and 1).
 
 # Random Forest metóda
 
-Random Forest ma problémy s chýbajúcimi hodnotammi v train_data, môžem ich omitnut
-
-```{r}
-sapply(train_data, function(x) sum(is.na(x))) # chybajuce hodnoty v stlpcoch
-
-# count na data which will be omitted
-nrow(na.omit(train_data))
-
-train_data_rf = na.omit(train_data)
-```
-
 
 ```{r}
 #install.packages("randomForest")
 library(randomForest)
 
 # Model
-rf_model <- randomForest(status_oh ~ GDP + Schooling, data = train_data_rf)
+rf_model <- randomForest(status_oh ~ GDP + Schooling, data = train_data)
 rf_model
 # Predictions
 rf_predictions <- predict(rf_model, test_data)
@@ -715,24 +699,13 @@ mean - ([,1]) a standard deviation - ([,2]) pre každú triedu (0 and 1).
 
 # Random Forest metóda
 
-Random Forest ma problémy s chýbajúcimi hodnotammi v train_data, môžem ich omitnut
-
-```{r}
-sapply(train_data, function(x) sum(is.na(x))) # chybajuce hodnoty v stlpcoch
-
-# count na data which will be omitted
-nrow(na.omit(train_data))
-
-train_data_rf = na.omit(train_data)
-```
-
 
 ```{r}
 #install.packages("randomForest")
 library(randomForest)
 
 # Model
-rf_model <- randomForest(status_oh ~ log_GDP + Schooling, data = train_data_rf)
+rf_model <- randomForest(status_oh ~ log_GDP + Schooling, data = train_data)
 rf_model
 # Predictions
 rf_predictions <- predict(rf_model, test_data)
@@ -1070,7 +1043,7 @@ data$status_oh <- as.factor(data$status_oh)
 train_control <- trainControl(method = "cv", 
                               number = 10)
 
-tuning_grid <- expand.grid(sigma = seq(0.1, 1, by = 0.1), C = 2^(-2:2))
+tuning_grid <- expand.grid(sigma = seq(0.1, 1, by = 0.3), C = 2^(-1:1))
 
 #model
 model <- train(status_oh ~ GDP + `percentage expenditure`, data = data %>% drop_na(), 
@@ -1097,7 +1070,79 @@ roc(test_data$status_oh, as.numeric(predicted_class_svm_rad))$auc
 ```
 
 
-### Menežérske zhrnutie
+## experiment s kategorickou verziou predikovanej hodnoty
+
+```{r}
+
+train_data %<>% mutate(status_oh = as.factor(status_oh))
+test_data %<>% mutate(status_oh = as.factor(status_oh))
+
+# glm nedokaze zobrat kategoricke hodnoty
+
+svm_model <- svm(status_oh ~ GDP + Schooling, data = train_data, kernel = "radial")
+summary(svm_model)
+svm_predictions <- predict(svm_model, test_data)
+confusionMatrix(as.factor(svm_predictions), as.factor(test_data$status_oh))
+
+svm_model_ln <- svm(status_oh ~ GDP + Schooling, data = train_data, kernel = "linear")
+summary(svm_model)
+svm_predictions_ln <- predict(svm_model_ln, test_data)
+confusionMatrix(as.factor(svm_predictions_ln), as.factor(test_data$status_oh))
+
+rf_model <- randomForest(status_oh ~ GDP + Schooling, data = train_data)
+rf_model
+rf_predictions <- predict(rf_model, test_data)
+confusionMatrix(as.factor(rf_predictions), as.factor(test_data$status_oh))
+
+library(MASS)
+lda_model <- lda(status_oh ~ GDP + Schooling, data = train_data)
+lda_model
+lda_predictions <- predict(lda_model, newdata = test_data)$class
+confusionMatrix(as.factor(lda_predictions), as.factor(test_data$status_oh))
+
+
+library(pROC)
+
+test_data$status_oh <- as.factor(test_data$status_oh)
+
+# Calculate performance metrics
+data.frame(
+  Model = c("SVM-linear","SVM-radial", "Random Forest", "LDA"),
+  Accuracy = c(
+    confusionMatrix(as.factor(svm_predictions_ln), test_data$status_oh)$overall["Accuracy"],
+    confusionMatrix(as.factor(svm_predictions), test_data$status_oh)$overall["Accuracy"],
+    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$overall["Accuracy"],
+    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$overall["Accuracy"]
+  ),
+  Sensitivity = c(
+    confusionMatrix(as.factor(svm_predictions_ln), test_data$status_oh)$byClass["Sensitivity"],
+    confusionMatrix(as.factor(svm_predictions), test_data$status_oh)$byClass["Sensitivity"],
+    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$byClass["Sensitivity"],
+    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$byClass["Sensitivity"]
+  ),
+  Specificity = c(
+    confusionMatrix(as.factor(svm_predictions_ln), test_data$status_oh)$byClass["Specificity"],
+    confusionMatrix(as.factor(svm_predictions), test_data$status_oh)$byClass["Specificity"],
+    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$byClass["Specificity"],
+    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$byClass["Specificity"]
+  ),
+  F1_Score = c(
+    confusionMatrix(as.factor(svm_predictions_ln), test_data$status_oh)$byClass["F1"],
+    confusionMatrix(as.factor(svm_predictions), test_data$status_oh)$byClass["F1"],
+    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$byClass["F1"],
+    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$byClass["F1"]
+  ),
+  AUC_ROC = c(
+    roc(test_data$status_oh, as.numeric(svm_predictions_ln))$auc,
+    roc(test_data$status_oh, as.numeric(svm_predictions))$auc,
+    roc(test_data$status_oh, as.numeric(rf_predictions))$auc,
+    roc(test_data$status_oh, as.numeric(lda_predictions))$auc
+  )
+)
+```
+
+
+# Menežérske zhrnutie
 
 Testovali sme 5 (resp 6) rôznych modelov na troch rôznych kombináciach parametrov.
 
