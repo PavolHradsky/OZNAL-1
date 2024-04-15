@@ -160,6 +160,18 @@ ggplot(combined_missing_values, aes(x = column, y = missing_values, fill = type)
 
 Kontrolovali sme aj ostatné chýbajúce hodnoty. Vidíme, že pomerne dosť sa ich nachádza aj v stĺpcoch **Population** a **hepatits B** alebo **GDB**. V ostaných je len menej, alebo žiadne.
 
+Drop NA rows pre použité stĺpce v modeli, kvôli prevencii proti odstráneniu počas predikcii:
+```{r}
+library(conflicted)
+data %<>% 
+  dplyr::select(Status, `Life expectancy`, `Adult Mortality`, Alcohol, 
+         `percentage expenditure`, BMI, `Total expenditure`, 
+         Diphtheria, `HIV/AIDS`, GDP, `Income composition of resources`, 
+         Schooling) %>%
+  drop_na()
+
+```
+
 ## Pairplot
 
 - identifikácia vzťahov a vzorov medzi premennými
@@ -226,17 +238,7 @@ corrplot(cor(data %>% select(`Life expectancy`, `Adult Mortality`, Alcohol,
 
 Pre 1 z experimentov sme vybrali len tie stĺpce, ktoré najviac korelujú a to **GDP** a **percentage expenditure**, ktoré sa budeme snažiť **predikovať** vzhľadom na status rozvinutosti krajiny. 
 
-Drop NA rows pre použité stĺpce v modeli, kvôli prevencii proti odstráneniu počas predikcii:
-```{r}
-library(conflicted)
-data %<>% 
-  dplyr::select(Status, `Life expectancy`, `Adult Mortality`, Alcohol, 
-         `percentage expenditure`, BMI, `Total expenditure`, 
-         Diphtheria, `HIV/AIDS`, GDP, `Income composition of resources`, 
-         Schooling) %>%
-  drop_na()
 
-```
 
 # One hot encode status rozvinutosti krajiny pre klasifikáciu
 ```{r}
@@ -286,16 +288,16 @@ test_data %>%
 #### H0 1. GDP a percentage expenditure nesuvisia s tým, či je krajina rozvojová alebo rozvinutá.
 
 
-Podľa korelácie z EDA vybraté prediktory **GDP a percentage expenditure** súvisia s **rozvojovým statusom krajiny**: 
+Podľa korelácie z EDA vybraté prediktory **GDP a percentage expenditure** by mali súvisieť s **rozvojovým statusom krajiny**: 
 ```{r}
 data %$% pairs( status_oh ~  `percentage expenditure` + GDP)
 ```
 
-Podľa pairplotu z EDA vybraté prediktory **GDP a Schooling** súvisia s **rozvojovým statusom krajiny**: 
+Podľa pairplotu z EDA vybraté prediktory **GDP a Schooling** by mali súvisieť s **rozvojovým statusom krajiny**: 
 ```{r}
 data %$% pairs( status_oh ~  GDP + Schooling)
 ```
-
+zlogaritmová GDP:
 ```{r}
 data %$% pairs( status_oh ~  log(GDP) + Schooling)
 ```
@@ -328,7 +330,7 @@ caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive =
 ```
 
 Celkovo model naznačuje, že **GDP a školstvo** sú **významnými prediktormi rozvojového statusu krajiny**, pričom **vyššie GDP a úroveň školstva sú spojené s vyššou pravdepodobnosťou byť rozvinutou krajinou**. H0 zamietame.
-Spravili sme cross tabulaciu a z confusion matrix vidíme, že náš model má **86,24%** presnosť. 
+Spravili sme cross tabulaciu a z confusion matrix vidíme, že náš model má **80,04%** presnosť. 
 
 ```{r}
 test_data %>%
@@ -352,7 +354,7 @@ test_data %>%
   ggtitle("GDP vs status_oh")
 ```
 
-Schooling viac vplýva na status krajiny (rozvinutá/nerozvinutá) ako GDP z grafu pre logistickú funkciu.
+Schooling viac vplýva na status krajiny (rozvinutá/nerozvinutá) ako GDP z grafu pre logistickú funkciu, čo nám nakoniec hovorí aj samotný model.
 
 
 # Radial SVM metóda
@@ -380,8 +382,8 @@ confusionMatrix(as.factor(predicted_class_svm_rad), as.factor(test_data$status_o
 
 ```
 
-Accuracy je 86,24%. H0 zamietame. Hodnota kappa 0.5833 naznačuje strednú až dobrú zhodu medzi pozorovaniami a predpovedaniami modelu.
-eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried. 
+Accuracy je 85,03%. H0 zamietame. Hodnota kappa 0.5825, čo naznačuje strednú až dobrú zhodu medzi pozorovaniami a predpovedaniami modelu.
+eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried, kedže nemáme kategorickú premennú. 
 
 
 # Linear SVM metóda
@@ -408,8 +410,8 @@ confusionMatrix(as.factor(predicted_class_svm_ln), as.factor(test_data$status_oh
 
 ```
 
-Accuracy je 66,38%. H0 zamietame.
-eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried. 
+Accuracy je 82%. H0 zamietame.
+eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried, kedže nemáme kategorickú premennú. 
 
 # Naive Bayes metóda
 ```{r}
@@ -435,12 +437,10 @@ confusionMatrix(as.factor(predicted_class_nb), as.factor(test_data$status_oh))
 
 ```
 
-Accuracy je 81,66%. H0 zamietame.
+Accuracy je 80,26%. H0 zamietame.
 mean - ([,1]) a standard deviation - ([,2]) pre každú triedu (0 and 1).
 
 # Random Forest metóda
-
-
 ```{r}
 #install.packages("randomForest")
 library(randomForest)
@@ -465,7 +465,7 @@ confusionMatrix(as.factor(predicted_class_randomm_forrest), as.factor(test_data$
 
 ```
 
-Accuracy je 79,26%. H0 zamietame.
+Accuracy je 85,9%. H0 zamietame.
 
 # LDA metóda
 ```{r}
@@ -493,7 +493,7 @@ confusionMatrix(as.factor(predicted_class_lda), as.factor(test_data$status_oh))
 
 ```
 
-Accuracy je 86,24%. Podobne ako pri SVM-radial metóde. H0 zamietame. 
+Accuracy je 80,04%. H0 zamietame. 
 
 ## Model performance parameters v 1 tabuľke pre 1. experiment:
 ```{r}
@@ -503,7 +503,7 @@ test_data$status_oh <- as.factor(test_data$status_oh)
 
 # Calculate performance metrics
 data.frame(
-  Model = c("GLM","LDA", "SVM-linear","SVM-radial", "Naive Bayes", "Random Forest"),
+  Model = c("GLM","LDA", "SVM-linear","SVM-radial", "Naive Bayes", "Random Forrest"),
   Accuracy = c(
     confusionMatrix(as.factor(predicted_class), test_data$status_oh)$overall["Accuracy"],
     confusionMatrix(as.factor(predicted_class_lda), test_data$status_oh)$overall["Accuracy"],
@@ -549,12 +549,12 @@ data.frame(
 
 ```
 
-Model LDA má najvyššiu presnosť zo všetkých modelov (0,8624) spolu s SVM-radial.
-Model SVM-linear má najnižšiu presnosť (0,664).
-Model SVM-radial má najvyššiu citlivosť (0,874), čo naznačuje, že efektívne identifikuje pozitívne prípady.
-Model SVM-linear má najvyššiu špecificitu (0,962), čo naznačuje, že efektívne identifikuje negatívne prípady.
-Model Random Forest dosahuje konkurenčný výkon vo všetkých metrikách.
-
+Model Random Forrest má najvyššiu presnosť zo všetkých modelov (0,859) spolu s SVM-radial.
+Model LBM a LDA máajú najnižšiu presnosť (0,800).
+Model SVM-radial má spolu s SVM-linear najvyššiu citlivosť (0,8579), čo naznačuje, že efektívne identifikuje pozitívne prípady.
+Model Naive Bayes má najvyššiu špecificitu (0,962), čo naznačuje, že efektívne identifikuje negatívne prípady, naopak SVM-linear malo najnižšiu a to výrazne.
+SVM-linear malo ešte horšie výsledky pri metrike AUCROC.
+Metrika F1 bola približne rovnaká pre všetky metódy.
 
 ### 2. experiment: podobne ako 1.experiment, no máme zlogaritmovaný GDP  
 
@@ -588,7 +588,7 @@ caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive =
 
 ```
 
-Accuracy: 78%.  H0 zamietame.
+Accuracy: 80,48%.  H0 zamietame. 
 
 
 ```{r}
@@ -640,8 +640,9 @@ confusionMatrix(as.factor(predicted_class_svm_rad), as.factor(test_data$status_o
 
 ```
 
-Accuracy: 84%. H0 zamietame.
-eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried.
+Accuracy: 82,86%. H0 zamietame.
+eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried, kedže nemáme kategorickú premennú.
+
 
 # Linear SVM metóda
 ```{r}
@@ -667,8 +668,9 @@ confusionMatrix(as.factor(predicted_class_svm_ln), as.factor(test_data$status_oh
 
 ```
 
-Accuracy 83%. H0 zamietame.
-eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried.
+Accuracy 81,13%. H0 zamietame.
+eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried, kedže nemáme kategorickú premennú.
+
 
 # Naive Bayes metóda
 ```{r}
@@ -694,12 +696,11 @@ confusionMatrix(as.factor(predicted_class_nb), as.factor(test_data$status_oh))
 
 ```
 
-Accuracy: 85%.  H0 zamietame.
-mean - ([,1]) a standard deviation - ([,2]) pre každú triedu (0 and 1).
+Accuracy: 80,91%.  H0 zamietame.
+mean - ([,1]) a standard deviation - ([,2]) pre každú triedu (0 and 1). 
+
 
 # Random Forest metóda
-
-
 ```{r}
 #install.packages("randomForest")
 library(randomForest)
@@ -724,7 +725,8 @@ confusionMatrix(as.factor(predicted_class_randomm_forrest), as.factor(test_data$
 
 ```
 
-Accuracy je 81%. H0 zamietame.
+Accuracy je 83,3%. H0 zamietame. 
+
 
 # LDA metóda
 ```{r}
@@ -751,7 +753,8 @@ confusionMatrix(as.factor(predicted_class_lda), as.factor(test_data$status_oh))
 
 ```
 
-Accuracy je 79,91%. H0 zamietame.
+Accuracy je 80,48%. H0 zamietame.
+
 
 ## Model performance parameters v 1 tabuľke pre 2. experiment:
 ```{r}
@@ -807,9 +810,11 @@ data.frame(
 
 ```
 
-Model Naive Bayes má najvyššiu presnosť zo všetkých modelov (0,851). Model LDA má najnižšiu presnosť (0,799) spolu s GLM.
-Model SVM-linear má omnoho lepšiu presnosť ako v predošlom experimente (0,829).
-Model Naive Bayes má najvyššiu citlivosť (0,874), čo naznačuje, že efektívne identifikuje pozitívne prípady. Modely Random Forrest, GLM, LDA majú najvyššiu špecificitu (0,948), čo naznačuje, že efektívne identifikujú negatívne prípady. 
+Model Random Forrest má najvyššiu presnosť zo všetkých modelov (0,8329). Modely LDA a GLM majú najnižšiu presnosť (0,804).
+
+Model SVM-radial má najvyššiu citlivosť (0,8257), čo naznačuje, že efektívne identifikuje pozitívne prípady. 
+Modely Random Forrest, GLM, LDA majú najvyššiu špecificitu (0,9204) a pridal sa k nim tentokrát aj model SVM-linear, čo naznačuje, že efektívne identifikujú negatívne prípady. Obmedzili sme logaritmovaním GDP false negativitu.
+Takisto sa pre SMV-linear zlepšila aj metrika AUCROC výrazne.
 
 ### 3.experiment: GPD a percentage expenditure ako prediktory
 
@@ -837,8 +842,7 @@ caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive =
 
 ```
  
-Accuracy: 73%. H0 zamietame.
- 
+Accuracy: 81,13%. H0 zamietame. 
 
 ```{r}
 data %>%
@@ -848,7 +852,7 @@ data %>%
              shape = 1, 
              size = 1.5) + 
   stat_smooth(method = glm, method.args = list(family = binomial)) +
-  ggtitle("Schooling vs status_oh")
+  ggtitle("percentage expenditure vs status_oh")
 ```
 
 ```{r}
@@ -888,8 +892,8 @@ confusionMatrix(as.factor(predicted_class_svm_rad), as.factor(test_data$status_o
 
 ```
 
-Accuracy: 85%. H0 zamietame.
-eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried.
+Accuracy: 80,48%. H0 zamietame.
+eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried, kedže nemáme kategorickú premennú.
 
 
 # Linear SVM metóda
@@ -914,12 +918,10 @@ predicted_class_svm_ln <- ifelse(svm_predictions >= optimal_cutoff, 1, 0)
 # Confusion matrix
 confusionMatrix(as.factor(predicted_class_svm_ln), as.factor(test_data$status_oh))
 
-#predicted <- predict(svm_model,data)
-#confusionMatrix(table(predicted, data$status_oh))
 ```
 
-Accuracy: 75%.  H0 zamietame.
-eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried.
+Accuracy: 84,38%. H0 zamietame.
+eps-regression - model sa snaží predpovedať spojitú premennú namiesto klasifikácie do dvoch tried, kedže nemáme kategorickú premennú.
 
 # Naive Bayes metóda
 ```{r}
@@ -945,9 +947,8 @@ confusionMatrix(as.factor(predicted_class_nb), as.factor(test_data$status_oh))
 
 ```
 
-Accuracy: 75%. H0 zamietame.
+Accuracy: 78,96%. H0 zamietame.
 mean - ([,1]) a standard deviation - ([,2]) pre každú triedu (0 and 1).
-
 
 # LDA metóda
 ```{r}
@@ -973,7 +974,7 @@ confusionMatrix(as.factor(predicted_class_lda), as.factor(test_data$status_oh))
 
 ```
 
-Accuracy: 73%.  H0 zamietame.
+Accuracy: 81,13%. H0 zamietame.
 
 
 ## Model performance parameters v 1 tabuľke pre 3. experiment
@@ -1025,17 +1026,20 @@ data.frame(
 
 ```
 
-Model SVM-radial má najvyššiu presnosť zo všetkých modelov (0,851). Model LDA má najnižšiu presnosť (0,731) spolu s GLM.
-Model SVM-radial má najvyššiu citlivosť (0,897), čo naznačuje, že efektívne identifikuje pozitívne prípady. Model SVM-radial majú výrazne nižšiu špecificitu (0,628), čo naznačuje, že neefektívne identifikuje negatívne prípady.
+Model SVM-lienar má najvyššiu presnosť zo všetkých modelov (0,8438). Model Naive Bayes má najnižšiu presnosť (0,789).
+
+Model SVM-linear má najvyššiu citlivosť (0,8927), čo naznačuje, že efektívne identifikuje pozitívne prípady. 
+Model SVM-linear majú výrazne nižšiu špecificitu (0,636), čo naznačuje, že neefektívne identifikuje negatívne prípady.
+Metrika AUCROC je približne rovnaká pre všetky modely.
+
 
 # Hyperparameter tuning pre SVM radial kernel, prediktory sú GDP and percentage expenditure
 
 K-fold cross validácia aplikovaná na klasifikáciu, kde **response** variable bude **"status_oh"** a ostatné stĺpce **(GDP, percentage expenditure)** budú **prediktory**.
 
-- posnažíme sa zlepšiť hodnotu specificity pre SVm radial kernel
+- posnažíme sa zlepšiť hodnotu specificity pre SVM linear kernel
 ```{r}
 install.packages("kernlab")
-
 set.seed(123)
 # one-hot encoding column status
 data$status_oh <- as.factor(data$status_oh)
@@ -1043,12 +1047,12 @@ data$status_oh <- as.factor(data$status_oh)
 train_control <- trainControl(method = "cv", 
                               number = 10)
 
-tuning_grid <- expand.grid(sigma = seq(0.1, 1, by = 0.3), C = 2^(-1:1))
+tuning_grid <- expand.grid(C = 2^(-1:1))
 
-#model
+# model
 model <- train(status_oh ~ GDP + `percentage expenditure`, data = data %>% drop_na(), 
                trControl = train_control, 
-               method = "svmRadial",tuneGrid = tuning_grid)
+               method = "svmLinear", tuneGrid = tuning_grid)
 
 print(model)
 
@@ -1056,21 +1060,29 @@ svm_predictions <- predict(model, test_data)
 svm_scores <- as.numeric(svm_predictions)
 
 actual <- test_data$status_oh
-roc_svm_rad = rocit(svm_scores, actual)
-cutoff_index <- which.max(roc_svm_rad$TPR + (1 - roc_svm_rad$FPR) - 1)
-optimal_cutoff <- roc_svm_rad$Cutoff[cutoff_index]
-predicted_class_svm_rad <- ifelse(svm_scores >= optimal_cutoff, 1, 0)
+roc_svm_ln <- rocit(svm_scores, actual)
+cutoff_index <- which.max(roc_svm_ln$TPR + (1 - roc_svm_ln$FPR) - 1)
+optimal_cutoff <- roc_svm_ln$Cutoff[cutoff_index]
+predicted_class_svm_ln <- ifelse(svm_scores >= optimal_cutoff, 1, 0)
 
-confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$byClass["Specificity"]
-confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$overall["Accuracy"]
-confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$byClass["Sensitivity"]
-confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$byClass["F1"]
-roc(test_data$status_oh, as.numeric(predicted_class_svm_rad))$auc
+specificity <- confusionMatrix(as.factor(predicted_class_svm_ln), test_data$status_oh)$byClass["Specificity"]
+accuracy <- confusionMatrix(as.factor(predicted_class_svm_ln), test_data$status_oh)$overall["Accuracy"]
+sensitivity <- confusionMatrix(as.factor(predicted_class_svm_ln), test_data$status_oh)$byClass["Sensitivity"]
+f1_score <- confusionMatrix(as.factor(predicted_class_svm_ln), test_data$status_oh)$byClass["F1"]
+auc <- roc(test_data$status_oh, as.numeric(predicted_class_svm_ln))$auc
 
+print(paste("Specificity:", specificity))
+print(paste("Accuracy:", accuracy))
+print(paste("Sensitivity:", sensitivity))
+print(paste("F1 Score:", f1_score))
+print(paste("AUC:", auc))
 ```
 
+Hodnotu specificity sa nám nepodarilo zlepšiť, práve naopak sa zhoršila. 
+Specificity znamená schopnosť modelu identifikovať negatívne prípady.
+Naopak sa nám podarilo zlepšiť hodnotu sensitivity výrazne, čo znamená schopnosť modelu identifikovať pozitívne prípady.
 
-## experiment s kategorickou verziou predikovanej hodnoty
+## Bonus experiment s kategorickou verziou predikovanej hodnoty
 
 ```{r}
 
@@ -1141,14 +1153,23 @@ data.frame(
 )
 ```
 
+Parametre máme rovnaké ako v 1.experimente, porovnáme výsledky:
+LDA malo najnižšiu presnosť (0,8481), v 1. experimente malo najvyššiu. 
+SVM-linear má navyššiu presnosť (0,8741), v 1. experimente malo najnižšiu.
+Random Forrest má najvyššiu specificity (0,6136).
+Sensitivity, F1 je približne rovnaká pre všetky modely.
+
 
 # Menežérske zhrnutie
 
 Testovali sme 5 (resp 6) rôznych modelov na troch rôznych kombináciach parametrov.
 
-V prvom experimente, kde sme predikovali status_oh pomocou GDP a Schooling, nám ako najlepší model vyšiel SVM s radial kernelom s accuracy 86%. To je oproti SVM s linearnym kernelom zlepšenie o takmer 30%. Je to preto, že GDP a Schooling nie su lineárne závislé, čo sme mali možnosť vidieť aj na pairplote.
+V prvom experimente, kde sme predikovali status_oh pomocou GDP a Schooling, nám ako najlepší model vyšiel ...
 
-V druhom experimente sme vytvorili modely na rovnakých premenných, ale GDP sme zlogaritmovali, s cieľom zlepšiť výsledky pre SVM linear kernel. Tu mal najlepší výsledok Naive Bayes model, s accuracy 85%. SVM s radiálnym kernelom mal 84%, SVM s lineárnym kernelom mal až 82% accuracy, čo je omnoho viac ako v predošlom experimente. To znamená, že zlogaritmovanie premennej zmenilo exponenciálnu závislosť na lineárnu, a tým pádom sme zdvihli úspešnosť SVM s lineárnym kernelom.
+V druhom experimente sme vytvorili modely na rovnakých premenných, ale GDP sme zlogaritmovali, s cieľom zlepšiť výsledky pre ...  Tu mal najlepší výsledok ...
 
-V poslednom experimente sme znovu predikovali status_oh, tentokrát na základe GDP a percentage expenditure. Tu nám znovu vyšiel ako najlepší model SVM s radiálnym kernelom s accuracy 85%. Zaujímavé ale je, že specificity má omnoho nižšiu ako ostatné modely - 62%, pričom ostatné majú okolo 80%. To znamená, že ak nám záleží na minimalizovaní falošne negatívnych prípadov, mali by sme v tomto prípade, pri tejto kombinácii prediktorov, radšej zvoliť iný model ako SVM s radiálnym kernelom. Vyskúšali sme preto aj hyperparameter tuning pre tento model, no výsledok pre specificity sa nezlepšil.
+V poslednom experimente sme znovu predikovali status_oh, tentokrát na základe GDP a percentage expenditure. Tu nám znovu vyšiel ako najlepší ...
 
+
+
+Bonusový experiment s kategorickou verziou predikovanej hodnoty nám ukázal, že ...
