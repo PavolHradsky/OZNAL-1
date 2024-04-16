@@ -74,28 +74,6 @@ missing_values_life_axpextancy
 dim(data)
 ```
 
-## Úprava datasetu o stĺpec Continent, pre možné budúce použitie. 
-
-```{r}
-
-#install.packages("countrycode", repos="https://cloud.r-project.org/")
-library(countrycode)
-data$Continent <- countrycode(data$Country, "country.name", "continent")
-data
-
-# počet krajín v jednotlivých kontinentoch
-data %>%
-  count(Continent) %>%
-  rename(Count = n) %>%
-  ggplot(aes(x=Continent, y=Count)) + 
-  geom_histogram(stat="identity", aes(fill=Count)) + 
-  scale_fill_viridis_c()
-
-dim(data)
-
-```
-Vidíme, že najviac záznamov máme z **Afriky, Ázie a Európy**.
-
 # Histogramy
 
 ```{r}
@@ -218,8 +196,8 @@ pairs(~ `Life expectancy` + `Adult Mortality` + Alcohol  +
 ## Korelačná tabuľka
 
 ```{r}
-#options(repos = c(CRAN = "https://cran.rstudio.com"))
-#install.packages("corrplot")
+#options(repos = c(CRAN = "https://cran.rstudio.com")) # uncomment if you don't have the package installed
+#install.packages("corrplot") # uncomment if you don't have the package installed
 library(corrplot)
 # plot with removed na values
 
@@ -236,7 +214,6 @@ corrplot(cor(data %>% select(`Life expectancy`, `Adult Mortality`, Alcohol,
 ```
 
 Pre 1 z experimentov sme vybrali len tie stĺpce, ktoré najviac korelujú a to **GDP** a **percentage expenditure**, ktoré sa budeme snažiť **predikovať** vzhľadom na status rozvinutosti krajiny. 
-
 
 
 # One hot encode status rozvinutosti krajiny pre klasifikáciu
@@ -441,7 +418,7 @@ mean - ([,1]) a standard deviation - ([,2]) pre každú triedu (0 and 1).
 
 # Random Forest metóda
 ```{r}
-#install.packages("randomForest")
+#install.packages("randomForest") # uncomment if you don't have the package installed
 library(randomForest)
 
 # Model
@@ -552,7 +529,7 @@ Model Random Forrest má najvyššiu presnosť zo všetkých modelov (0,859) spo
 Model GLM a LDA majú najnižšiu presnosť (0,800).
 
 Model SVM-radial má spolu s SVM-linear najvyššiu citlivosť (0,8579), čo naznačuje, že efektívne identifikuje pozitívne prípady.
-Model Naive Bayes má najvyššiu špecificitu (0,962), čo naznačuje, že efektívne identifikuje negatívne prípady, naopak SVM-linear malo najnižšiu a to výrazne.
+Model Naive Bayes má najvyššiu špecificitu (0,9318), čo naznačuje, že efektívne identifikuje negatívne prípady, naopak SVM-linear malo najnižšiu a to výrazne.
 SVM-linear malo ešte horšie výsledky pri metrike AUCROC.
 Metrika F1 bola približne rovnaká pre všetky metódy.
 
@@ -702,7 +679,7 @@ mean - ([,1]) a standard deviation - ([,2]) pre každú triedu (0 and 1).
 
 # Random Forest metóda
 ```{r}
-#install.packages("randomForest")
+#install.packages("randomForest") # uncomment if you don't have the package installed
 library(randomForest)
 
 # Model
@@ -1083,7 +1060,7 @@ K-fold cross validácia aplikovaná na klasifikáciu, kde **response** variable 
 
 - posnažíme sa zlepšiť hodnotu specificity pre SVM linear kernel
 ```{r}
-#install.packages("kernlab")
+#install.packages("kernlab") # uncomment if you don't have the package installed
 set.seed(123)
 # one-hot encoding column status
 data$status_oh <- as.factor(data$status_oh)
