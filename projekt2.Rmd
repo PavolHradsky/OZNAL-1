@@ -1119,36 +1119,36 @@ test_data$status_oh <- as.factor(test_data$status_oh)
 
 # Calculate performance metrics
 data.frame(
-  Model = c("SVM-linear","SVM-radial", "Random Forest", "LDA"),
+  Model = c("LDA", "SVM-linear","SVM-radial", "Random Forest"),
   Accuracy = c(
+    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$overall["Accuracy"],
     confusionMatrix(as.factor(svm_predictions_ln), test_data$status_oh)$overall["Accuracy"],
     confusionMatrix(as.factor(svm_predictions), test_data$status_oh)$overall["Accuracy"],
-    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$overall["Accuracy"],
-    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$overall["Accuracy"]
+    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$overall["Accuracy"]
   ),
   Sensitivity = c(
+    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$byClass["Sensitivity"],
     confusionMatrix(as.factor(svm_predictions_ln), test_data$status_oh)$byClass["Sensitivity"],
     confusionMatrix(as.factor(svm_predictions), test_data$status_oh)$byClass["Sensitivity"],
-    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$byClass["Sensitivity"],
-    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$byClass["Sensitivity"]
+    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$byClass["Sensitivity"]
   ),
   Specificity = c(
+    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$byClass["Specificity"],
     confusionMatrix(as.factor(svm_predictions_ln), test_data$status_oh)$byClass["Specificity"],
     confusionMatrix(as.factor(svm_predictions), test_data$status_oh)$byClass["Specificity"],
-    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$byClass["Specificity"],
-    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$byClass["Specificity"]
+    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$byClass["Specificity"]
   ),
   F1_Score = c(
+    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$byClass["F1"],
     confusionMatrix(as.factor(svm_predictions_ln), test_data$status_oh)$byClass["F1"],
     confusionMatrix(as.factor(svm_predictions), test_data$status_oh)$byClass["F1"],
-    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$byClass["F1"],
-    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$byClass["F1"]
+    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$byClass["F1"]
   ),
   AUC_ROC = c(
+    roc(test_data$status_oh, as.numeric(lda_predictions))$auc,
     roc(test_data$status_oh, as.numeric(svm_predictions_ln))$auc,
     roc(test_data$status_oh, as.numeric(svm_predictions))$auc,
-    roc(test_data$status_oh, as.numeric(rf_predictions))$auc,
-    roc(test_data$status_oh, as.numeric(lda_predictions))$auc
+    roc(test_data$status_oh, as.numeric(rf_predictions))$auc
   )
 )
 ```

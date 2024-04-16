@@ -531,7 +531,7 @@ missing_values_life_axpextancy</code></pre>
 <pre><code>## package &#39;countrycode&#39; successfully unpacked and MD5 sums checked
 ## 
 ## The downloaded binary packages are in
-##  C:\Users\peter\AppData\Local\Temp\RtmpO8b0lW\downloaded_packages</code></pre>
+##  C:\Users\peter\AppData\Local\Temp\RtmpSAt96F\downloaded_packages</code></pre>
 <pre class="r"><code>library(countrycode)
 data$Continent &lt;- countrycode(data$Country, &quot;country.name&quot;, &quot;continent&quot;)
 data</code></pre>
@@ -703,7 +703,7 @@ install.packages(&quot;corrplot&quot;)</code></pre>
 <pre><code>## package &#39;corrplot&#39; successfully unpacked and MD5 sums checked
 ## 
 ## The downloaded binary packages are in
-##  C:\Users\peter\AppData\Local\Temp\RtmpO8b0lW\downloaded_packages</code></pre>
+##  C:\Users\peter\AppData\Local\Temp\RtmpSAt96F\downloaded_packages</code></pre>
 <pre class="r"><code>library(corrplot)
 # plot with removed na values
 
@@ -2297,7 +2297,7 @@ ostatné stĺpce <strong>(GDP, percentage expenditure)</strong> budú
 <pre><code>## package &#39;kernlab&#39; successfully unpacked and MD5 sums checked
 ## 
 ## The downloaded binary packages are in
-##  C:\Users\peter\AppData\Local\Temp\RtmpO8b0lW\downloaded_packages</code></pre>
+##  C:\Users\peter\AppData\Local\Temp\RtmpSAt96F\downloaded_packages</code></pre>
 <pre class="r"><code>set.seed(123)
 # one-hot encoding column status
 data$status_oh &lt;- as.factor(data$status_oh)
@@ -2564,43 +2564,43 @@ test_data$status_oh &lt;- as.factor(test_data$status_oh)
 
 # Calculate performance metrics
 data.frame(
-  Model = c(&quot;SVM-linear&quot;,&quot;SVM-radial&quot;, &quot;Random Forest&quot;, &quot;LDA&quot;),
+  Model = c(&quot;LDA&quot;, &quot;SVM-linear&quot;,&quot;SVM-radial&quot;, &quot;Random Forest&quot;),
   Accuracy = c(
+    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$overall[&quot;Accuracy&quot;],
     confusionMatrix(as.factor(svm_predictions_ln), test_data$status_oh)$overall[&quot;Accuracy&quot;],
     confusionMatrix(as.factor(svm_predictions), test_data$status_oh)$overall[&quot;Accuracy&quot;],
-    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$overall[&quot;Accuracy&quot;],
-    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$overall[&quot;Accuracy&quot;]
+    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$overall[&quot;Accuracy&quot;]
   ),
   Sensitivity = c(
+    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$byClass[&quot;Sensitivity&quot;],
     confusionMatrix(as.factor(svm_predictions_ln), test_data$status_oh)$byClass[&quot;Sensitivity&quot;],
     confusionMatrix(as.factor(svm_predictions), test_data$status_oh)$byClass[&quot;Sensitivity&quot;],
-    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$byClass[&quot;Sensitivity&quot;],
-    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$byClass[&quot;Sensitivity&quot;]
+    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$byClass[&quot;Sensitivity&quot;]
   ),
   Specificity = c(
+    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$byClass[&quot;Specificity&quot;],
     confusionMatrix(as.factor(svm_predictions_ln), test_data$status_oh)$byClass[&quot;Specificity&quot;],
     confusionMatrix(as.factor(svm_predictions), test_data$status_oh)$byClass[&quot;Specificity&quot;],
-    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$byClass[&quot;Specificity&quot;],
-    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$byClass[&quot;Specificity&quot;]
+    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$byClass[&quot;Specificity&quot;]
   ),
   F1_Score = c(
+    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$byClass[&quot;F1&quot;],
     confusionMatrix(as.factor(svm_predictions_ln), test_data$status_oh)$byClass[&quot;F1&quot;],
     confusionMatrix(as.factor(svm_predictions), test_data$status_oh)$byClass[&quot;F1&quot;],
-    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$byClass[&quot;F1&quot;],
-    confusionMatrix(as.factor(lda_predictions), test_data$status_oh)$byClass[&quot;F1&quot;]
+    confusionMatrix(as.factor(rf_predictions), test_data$status_oh)$byClass[&quot;F1&quot;]
   ),
   AUC_ROC = c(
+    roc(test_data$status_oh, as.numeric(lda_predictions))$auc,
     roc(test_data$status_oh, as.numeric(svm_predictions_ln))$auc,
     roc(test_data$status_oh, as.numeric(svm_predictions))$auc,
-    roc(test_data$status_oh, as.numeric(rf_predictions))$auc,
-    roc(test_data$status_oh, as.numeric(lda_predictions))$auc
+    roc(test_data$status_oh, as.numeric(rf_predictions))$auc
   )
 )</code></pre>
 <pre><code>##           Model  Accuracy Sensitivity Specificity  F1_Score   AUC_ROC
-## 1    SVM-linear 0.8741866   0.9410188   0.5909091 0.9236842 0.7659639
-## 2    SVM-radial 0.8676790   0.9410188   0.5568182 0.9200524 0.7489185
-## 3 Random Forest 0.8720174   0.9329759   0.6136364 0.9218543 0.7733061
-## 4           LDA 0.8481562   0.9329759   0.4886364 0.9086162 0.7108061</code></pre>
+## 1           LDA 0.8481562   0.9329759   0.4886364 0.9086162 0.7108061
+## 2    SVM-linear 0.8741866   0.9410188   0.5909091 0.9236842 0.7659639
+## 3    SVM-radial 0.8676790   0.9410188   0.5568182 0.9200524 0.7489185
+## 4 Random Forest 0.8720174   0.9329759   0.6136364 0.9218543 0.7733061</code></pre>
 <p>Parametre máme rovnaké ako v 1.experimente, porovnáme výsledky: LDA
 malo najnižšiu presnosť (0,8481), v 1. experimente malo najvyššiu.
 SVM-linear má navyššiu presnosť (0,8741), v 1. experimente malo
