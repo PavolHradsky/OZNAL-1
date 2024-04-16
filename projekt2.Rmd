@@ -76,10 +76,9 @@ dim(data)
 
 ## Úprava datasetu o stĺpec Continent, pre možné budúce použitie. 
 
-
 ```{r}
 
-install.packages("countrycode", repos="https://cloud.r-project.org/")
+#install.packages("countrycode", repos="https://cloud.r-project.org/")
 library(countrycode)
 data$Continent <- countrycode(data$Country, "country.name", "continent")
 data
@@ -219,8 +218,8 @@ pairs(~ `Life expectancy` + `Adult Mortality` + Alcohol  +
 ## Korelačná tabuľka
 
 ```{r}
-options(repos = c(CRAN = "https://cran.rstudio.com"))
-install.packages("corrplot")
+#options(repos = c(CRAN = "https://cran.rstudio.com"))
+#install.packages("corrplot")
 library(corrplot)
 # plot with removed na values
 
@@ -843,7 +842,8 @@ caret::confusionMatrix(as.factor(predicted_class), as.factor(actual), positive =
 
 ```
  
-Accuracy: 81,13%. H0 zamietame. 
+Celkovo model naznačuje, že GDP a percentage expenditure sú významnými prediktormi rozvojového statusu krajiny, pričom vyššie GDP a percentage expenditure sú spojené s vyššou pravdepodobnosťou byť rozvinutou krajinou. H0 zamietame. Spravili sme cross tabulaciu a z confusion matrix vidíme, že náš model má 81,13% presnosť. 
+
 
 ```{r}
 data %>%
@@ -867,6 +867,7 @@ data %>%
   ggtitle("GDP vs status_oh")
 ```
 
+percentage expendicture viac vplýva na status krajiny (rozvinutá/nerozvinutá) ako GDP z grafu pre logistickú funkciu, čo nám nakoniec hovorí aj samotný model.
 
 # Radial SVM metóda
 ```{r}
@@ -1071,6 +1072,10 @@ Model Random Forest má najvyššiu citlivosť (0,9168), čo naznačuje, že efe
 Model Random Forest majú výrazne nižšiu špecificitu (0,6022), čo naznačuje, že neefektívne identifikuje negatívne prípady.
 Metrika AUCROC je približne rovnaká pre všetky modely.
 
+- pairplot kombinácie percentage expenditure a Schooling
+```{r}
+data %$% pairs(status_oh ~  `percentage expenditure` + Schooling)
+```
 
 # Hyperparameter tuning pre SVM radial kernel, prediktory sú GDP and percentage expenditure
 
@@ -1078,7 +1083,7 @@ K-fold cross validácia aplikovaná na klasifikáciu, kde **response** variable 
 
 - posnažíme sa zlepšiť hodnotu specificity pre SVM linear kernel
 ```{r}
-install.packages("kernlab")
+#install.packages("kernlab")
 set.seed(123)
 # one-hot encoding column status
 data$status_oh <- as.factor(data$status_oh)
