@@ -531,7 +531,7 @@ missing_values_life_axpextancy</code></pre>
 <pre><code>## package &#39;countrycode&#39; successfully unpacked and MD5 sums checked
 ## 
 ## The downloaded binary packages are in
-##  C:\Users\hrads\AppData\Local\Temp\RtmpaE5oET\downloaded_packages</code></pre>
+##  C:\Users\peter\AppData\Local\Temp\RtmpyyHfND\downloaded_packages</code></pre>
 <pre class="r"><code>library(countrycode)
 data$Continent &lt;- countrycode(data$Country, &quot;country.name&quot;, &quot;continent&quot;)
 data</code></pre>
@@ -703,7 +703,7 @@ install.packages(&quot;corrplot&quot;)</code></pre>
 <pre><code>## package &#39;corrplot&#39; successfully unpacked and MD5 sums checked
 ## 
 ## The downloaded binary packages are in
-##  C:\Users\hrads\AppData\Local\Temp\RtmpaE5oET\downloaded_packages</code></pre>
+##  C:\Users\peter\AppData\Local\Temp\RtmpyyHfND\downloaded_packages</code></pre>
 <pre class="r"><code>library(corrplot)
 # plot with removed na values
 
@@ -1366,12 +1366,13 @@ data.frame(
 ## 6 Random Forrest 0.8590022   0.8552279   0.8750000 0.9075391 0.8651139</code></pre>
 <p>Model Random Forrest má najvyššiu presnosť zo všetkých modelov
 (0,859) spolu s SVM-radial. Model GLM a LDA majú najnižšiu presnosť
-(0,800). Model SVM-radial má spolu s SVM-linear najvyššiu citlivosť
-(0,8579), čo naznačuje, že efektívne identifikuje pozitívne prípady.
-Model Naive Bayes má najvyššiu špecificitu (0,962), čo naznačuje, že
-efektívne identifikuje negatívne prípady, naopak SVM-linear malo
-najnižšiu a to výrazne. SVM-linear malo ešte horšie výsledky pri metrike
-AUCROC. Metrika F1 bola približne rovnaká pre všetky metódy.</p>
+(0,800).</p>
+<p>Model SVM-radial má spolu s SVM-linear najvyššiu citlivosť (0,8579),
+čo naznačuje, že efektívne identifikuje pozitívne prípady. Model Naive
+Bayes má najvyššiu špecificitu (0,962), čo naznačuje, že efektívne
+identifikuje negatívne prípady, naopak SVM-linear malo najnižšiu a to
+výrazne. SVM-linear malo ešte horšie výsledky pri metrike AUCROC.
+Metrika F1 bola približne rovnaká pre všetky metódy.</p>
 <div id="experiment-podobne-ako-1.experiment-no-máme-zlogaritmovaný-gdp" class="section level3">
 <h3>2. experiment: podobne ako 1.experiment, no máme zlogaritmovaný
 GDP</h3>
@@ -2288,6 +2289,7 @@ confusionMatrix(as.factor(predicted_class_randomm_forrest), as.factor(test_data_
 ##                                           
 ##        &#39;Positive&#39; Class : 0               
 ## </code></pre>
+<p>Accuracy: 85,68%. H0 zamietame.</p>
 </div>
 <div id="model-performance-parameters-v-1-tabuľke-pre-3.-experiment" class="section level2">
 <h2>Model performance parameters v 1 tabuľke pre 3. experiment</h2>
@@ -2371,7 +2373,7 @@ ostatné stĺpce <strong>(GDP, percentage expenditure)</strong> budú
 <pre><code>## package &#39;kernlab&#39; successfully unpacked and MD5 sums checked
 ## 
 ## The downloaded binary packages are in
-##  C:\Users\hrads\AppData\Local\Temp\RtmpaE5oET\downloaded_packages</code></pre>
+##  C:\Users\peter\AppData\Local\Temp\RtmpyyHfND\downloaded_packages</code></pre>
 <pre class="r"><code>set.seed(123)
 # one-hot encoding column status
 data$status_oh &lt;- as.factor(data$status_oh)

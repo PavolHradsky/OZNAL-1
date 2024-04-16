@@ -551,6 +551,7 @@ data.frame(
 
 Model Random Forrest má najvyššiu presnosť zo všetkých modelov (0,859) spolu s SVM-radial.
 Model GLM a LDA majú najnižšiu presnosť (0,800).
+
 Model SVM-radial má spolu s SVM-linear najvyššiu citlivosť (0,8579), čo naznačuje, že efektívne identifikuje pozitívne prípady.
 Model Naive Bayes má najvyššiu špecificitu (0,962), čo naznačuje, že efektívne identifikuje negatívne prípady, naopak SVM-linear malo najnižšiu a to výrazne.
 SVM-linear malo ešte horšie výsledky pri metrike AUCROC.
@@ -1007,7 +1008,7 @@ predicted_class_randomm_forrest <- ifelse(rf_predictions >= optimal_cutoff, 1, 0
 
 confusionMatrix(as.factor(predicted_class_randomm_forrest), as.factor(test_data_rf$status_oh))
 ```
-
+Accuracy: 85,68%. H0 zamietame.
 
 ## Model performance parameters v 1 tabuľke pre 3. experiment
 ```{r}
