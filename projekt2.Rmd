@@ -1164,12 +1164,10 @@ Sensitivity, F1 je približne rovnaká pre všetky modely.
 
 Testovali sme 5 (resp 6) rôznych modelov na troch rôznych kombináciach parametrov.
 
-V prvom experimente, kde sme predikovali status_oh pomocou GDP a Schooling, nám ako najlepší model vyšiel ...
+V prvom experimente, kde sme predikovali status_oh pomocou GDP a Schooling, nám ako najlepší model vyšiel Random Forest, a hned za nim SVM s radialnym kernelom, obidva s accuracy priblizne 85%.
 
-V druhom experimente sme vytvorili modely na rovnakých premenných, ale GDP sme zlogaritmovali, s cieľom zlepšiť výsledky pre ...  Tu mal najlepší výsledok ...
+V druhom experimente sme vytvorili modely na rovnakých premenných, ale GDP sme zlogaritmovali, s cieľom zlepšiť výsledky pre GLM s linearnym kernelom. Tu mal najlepší výsledok znova Random FOrest a SVM s radialnym filtrom, aj ked bola accuracy mierne nizsia ako v prvom experimente. SVM s linearnym filtrom mal ale oproti predoslemu experimentu vyssiu AUROC, aj ked accuracy ostala podobna. Podarilo sa nam teda dokazat, ze po logaritmovani premennej ktora mala pred tym exponencialny rast, nam linearny kernel na SVM dokaze lepsie fitnut.
 
-V poslednom experimente sme znovu predikovali status_oh, tentokrát na základe GDP a percentage expenditure. Tu nám znovu vyšiel ako najlepší ...
+V poslednom experimente sme znovu predikovali status_oh, tentokrát na základe GDP a percentage expenditure. Tu nám  vyšiel ako najlepší SVM s linearnym kernelom, s accuracy 84%. Na tento model sme skusili aj hyperparameter tuning,  s nadejou, ze nam to model este zlepsi. Accuracy sa naozaj zlepsila, aj ked len o 1%, sensitivity stupla z 89% na 97%, ale specificity klesla zo 63% na 35%. TO znamna, ze nam znacne zrastla miera falosne negativnych pripadov.
 
-
-
-Bonusový experiment s kategorickou verziou predikovanej hodnoty nám ukázal, že ...
+Bonusový experiment s kategorickou verziou predikovanej hodnoty nám ukázal, že oproti prvemu experimentu inak vyhodnocoval vysledky ako my s ROC kryvkov a youden pointom, a teda accuracy vo vsetkych modeloch stupla. Tak isto stupla sensitivity. Ale specificity a AUROC vo vsetkych modeloch klesla. To znamena, rovnako ako v predoslom experimente, ze tieto modely viac predikuju falosne pozitivne pripady.
