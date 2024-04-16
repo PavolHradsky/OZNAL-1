@@ -977,59 +977,97 @@ confusionMatrix(as.factor(predicted_class_lda), as.factor(test_data$status_oh))
 Accuracy: 81,13%. H0 zamietame.
 
 
+## Random Forest
+
+```{r}
+library(randomForest)
+train_data_rf = train_data %>% 
+  dplyr::select(status_oh, `percentage expenditure`, GDP) %>% 
+  mutate(PE = `percentage expenditure`) %>%
+  drop_na()
+test_data_rf = test_data %>% 
+  dplyr::select(status_oh, `percentage expenditure`, GDP) %>% 
+  mutate(PE = `percentage expenditure`) %>%
+  drop_na()
+# Model
+rf_model <- randomForest(status_oh ~ PE + GDP, data = train_data_rf)
+rf_model
+# Predictions
+rf_predictions <- predict(rf_model, test_data_rf)
+
+actual <- test_data_rf$status_oh
+roc_random_forrest = rocit(rf_predictions, actual)
+plot(roc_random_forrest)
+cutoff_index <- which.max(roc_random_forrest$TPR + (1 - roc_random_forrest$FPR) - 1)
+optimal_cutoff <- roc_random_forrest$Cutoff[cutoff_index]
+optimal_cutoff
+
+predicted_class_randomm_forrest <- ifelse(rf_predictions >= optimal_cutoff, 1, 0)
+
+
+confusionMatrix(as.factor(predicted_class_randomm_forrest), as.factor(test_data_rf$status_oh))
+```
+
+
 ## Model performance parameters v 1 tabuľke pre 3. experiment
 ```{r}
 library(pROC)
 
 test_data$status_oh <- as.factor(test_data$status_oh)
+test_data_rf$status_oh <- as.factor(test_data_rf$status_oh)
 
 # Calculate performance metrics
 data.frame(
-  Model = c("GLM","LDA", "SVM-linear","SVM-radial", "Naive Bayes"),
+  Model = c("GLM","LDA", "SVM-linear","SVM-radial", "Naive Bayes", "Random Forest"),
   Accuracy = c(
     confusionMatrix(as.factor(predicted_class), test_data$status_oh)$overall["Accuracy"],
     confusionMatrix(as.factor(predicted_class_lda), test_data$status_oh)$overall["Accuracy"],
     confusionMatrix(as.factor(predicted_class_svm_ln), test_data$status_oh)$overall["Accuracy"],
     confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$overall["Accuracy"],
-    confusionMatrix(as.factor(predicted_class_nb), test_data$status_oh)$overall["Accuracy"]
+    confusionMatrix(as.factor(predicted_class_nb), test_data$status_oh)$overall["Accuracy"],
+    confusionMatrix(as.factor(predicted_class_randomm_forrest), test_data_rf$status_oh)$overall["Accuracy"]
   ),
   Sensitivity = c(
     confusionMatrix(as.factor(predicted_class), test_data$status_oh)$byClass["Sensitivity"],
     confusionMatrix(as.factor(predicted_class_lda), test_data$status_oh)$byClass["Sensitivity"],
     confusionMatrix(as.factor(predicted_class_svm_ln), test_data$status_oh)$byClass["Sensitivity"],
     confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$byClass["Sensitivity"],
-    confusionMatrix(as.factor(predicted_class_nb), test_data$status_oh)$byClass["Sensitivity"]
+    confusionMatrix(as.factor(predicted_class_nb), test_data$status_oh)$byClass["Sensitivity"],
+    confusionMatrix(as.factor(predicted_class_randomm_forrest), test_data_rf$status_oh)$byClass["Sensitivity"]
   ),
   Specificity = c(
     confusionMatrix(as.factor(predicted_class), test_data$status_oh)$byClass["Specificity"],
     confusionMatrix(as.factor(predicted_class_lda), test_data$status_oh)$byClass["Specificity"],
     confusionMatrix(as.factor(predicted_class_svm_ln), test_data$status_oh)$byClass["Specificity"],
     confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$byClass["Specificity"],
-    confusionMatrix(as.factor(predicted_class_nb), test_data$status_oh)$byClass["Specificity"]
+    confusionMatrix(as.factor(predicted_class_nb), test_data$status_oh)$byClass["Specificity"],
+    confusionMatrix(as.factor(predicted_class_randomm_forrest), test_data_rf$status_oh)$byClass["Specificity"]
   ),
   F1_Score = c(
     confusionMatrix(as.factor(predicted_class), test_data$status_oh)$byClass["F1"],
     confusionMatrix(as.factor(predicted_class_lda), test_data$status_oh)$byClass["F1"],
     confusionMatrix(as.factor(predicted_class_svm_ln), test_data$status_oh)$byClass["F1"],
     confusionMatrix(as.factor(predicted_class_svm_rad), test_data$status_oh)$byClass["F1"],
-    confusionMatrix(as.factor(predicted_class_nb), test_data$status_oh)$byClass["F1"]
+    confusionMatrix(as.factor(predicted_class_nb), test_data$status_oh)$byClass["F1"],
+    confusionMatrix(as.factor(predicted_class_randomm_forrest), test_data_rf$status_oh)$byClass["F1"]
   ),
   AUC_ROC = c(
     roc(test_data$status_oh, as.numeric(predicted_class))$auc,
     roc(test_data$status_oh, as.numeric(predicted_class_lda))$auc,
     roc(test_data$status_oh, as.numeric(predicted_class_svm_ln))$auc,
     roc(test_data$status_oh, as.numeric(predicted_class_svm_rad))$auc,
-    roc(test_data$status_oh, as.numeric(predicted_class_nb))$auc
+    roc(test_data$status_oh, as.numeric(predicted_class_nb))$auc,
+    roc(test_data_rf$status_oh, as.numeric(predicted_class_randomm_forrest))$auc
   )
 )
 
 
 ```
 
-Model SVM-lienar má najvyššiu presnosť zo všetkých modelov (0,8438). Model Naive Bayes má najnižšiu presnosť (0,789).
+Modely Random Forest a SVM-lienar maju najvyššiu presnosť zo všetkých modelov (0,85 a 0,8438). Model Naive Bayes má najnižšiu presnosť (0,789).
 
-Model SVM-linear má najvyššiu citlivosť (0,8927), čo naznačuje, že efektívne identifikuje pozitívne prípady. 
-Model SVM-linear majú výrazne nižšiu špecificitu (0,636), čo naznačuje, že neefektívne identifikuje negatívne prípady.
+Model Random Forest má najvyššiu citlivosť (0,9168), čo naznačuje, že efektívne identifikuje pozitívne prípady. 
+Model Random Forest majú výrazne nižšiu špecificitu (0,6022), čo naznačuje, že neefektívne identifikuje negatívne prípady.
 Metrika AUCROC je približne rovnaká pre všetky modely.
 
 
@@ -1168,6 +1206,6 @@ V prvom experimente, kde sme predikovali status_oh pomocou GDP a Schooling, nám
 
 V druhom experimente sme vytvorili modely na rovnakých premenných, ale GDP sme zlogaritmovali, s cieľom zlepšiť výsledky pre GLM s lineárnym kernelom. Tu mal najlepší výsledok znova Random Forrest a SVM s radiálnym kernelom, aj keď bola accuracy mierne nižšia ako v prvom experimente. SVM s lineárnym kernelom mal ale oproti predošlému experimentu vyššiu AUROC a hlavne specificity, ktorá má teraz pre túto metódu najväčšiu hodnotu, aj keď accuracy zostala podobná. Podarilo sa nám teda dokázať, že po zlogaritmovaní premennej, ktorá mala predtým exponenciálny rast, nám lineárny kernel na SVM dokáže lepšie fitnúť.
 
-V treťom experimente sme znovu predikovali status_oh, tentokrát na základe GDP a percentage expenditure. Tu nám vyšiel ako najlepšia metóda SVM s lineárnym kernelom, s accuracy 84%. Na tento model sme skúsili aj hyperparameter tuning, s nádejou, že nám to model ešte zlepší. Accuracy sa naozaj zlepšila, aj keď len o 1%,  hodnota sensitivity stúpla z 89% na 97%, ale specificity klesla zo 63% na 35%. TO znamená, že nám značne vzrástla miera falošne negatívnych prípadov.
+V treťom experimente sme znovu predikovali status_oh, tentokrát na základe GDP a percentage expenditure. Tu nám vyšiel ako najlepšia metóda Random forest a SVM s lineárnym kernelom, s accuracy 85% a 84%. Na tento model sme skúsili aj hyperparameter tuning, s nádejou, že nám to model ešte zlepší. Accuracy sa naozaj zlepšila, aj keď len o 1%,  hodnota sensitivity stúpla z 89% na 97%, ale specificity klesla zo 63% na 35%. TO znamená, že nám značne vzrástla miera falošne negatívnych prípadov.
 
 V poslednom experimente s kategorickou verziou predikovanej hodnoty nám ukázal, že oproti prvému experimentu inak vyhodnocoval výsledky ako náš prístup s ROC kryvkou a youden pointom, a teda accuracy vo všetkych modeloch stúpla. Tak isto stúpla sensitivity. Ale hodnoty pre specificity a AUROC vo všetkých modeloch klesla. To znamená, rovnako ako v predošlom experimente, že tieto modely viac predikuju falošne pozitívne prípady.
