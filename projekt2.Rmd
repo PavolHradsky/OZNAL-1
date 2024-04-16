@@ -1054,7 +1054,7 @@ Metrika AUCROC je približne rovnaká pre všetky modely.
 data %$% pairs(status_oh ~  `percentage expenditure` + Schooling)
 ```
 
-# Hyperparameter tuning pre SVM radial kernel, prediktory sú GDP and percentage expenditure
+# Hyperparameter tuning pre SVM radial kernel, prediktory sú GDP a percentage expenditure
 
 K-fold cross validácia aplikovaná na klasifikáciu, kde **response** variable bude **"status_oh"** a ostatné stĺpce **(GDP, percentage expenditure)** budú **prediktory**.
 
@@ -1064,11 +1064,11 @@ K-fold cross validácia aplikovaná na klasifikáciu, kde **response** variable 
 set.seed(123)
 # one-hot encoding column status
 data$status_oh <- as.factor(data$status_oh)
-
+# 10 násobná cv - cross validation, data sa rozdelia na 10 rovnomerných častí a proces sa opakuje 10 krát
 train_control <- trainControl(method = "cv", 
                               number = 10)
 
-tuning_grid <- expand.grid(C = 2^(-1:1))
+tuning_grid <- expand.grid(C = 2^(-5:5))
 
 # model
 model <- train(status_oh ~ GDP + `percentage expenditure`, data = data %>% drop_na(), 
@@ -1102,6 +1102,8 @@ print(paste("AUC:", auc))
 Hodnotu specificity sa nám nepodarilo zlepšiť, práve naopak sa zhoršila. 
 Specificity znamená schopnosť modelu identifikovať negatívne prípady.
 Naopak sa nám podarilo zlepšiť hodnotu sensitivity výrazne, čo znamená schopnosť modelu identifikovať pozitívne prípady.
+Hodnota C = 4 bola vybraná ako optimálna, pretože poskytla najväčšiu presnosť.
+
 
 ## Posledný experiment s kategorickou verziou predikovanej hodnoty
 
@@ -1189,6 +1191,6 @@ V prvom experimente, kde sme predikovali status_oh pomocou GDP a Schooling, nám
 
 V druhom experimente sme vytvorili modely na rovnakých premenných, ale GDP sme zlogaritmovali, s cieľom zlepšiť výsledky pre GLM s lineárnym kernelom. Tu mal najlepší výsledok znova Random Forrest a SVM s radiálnym kernelom, aj keď bola accuracy mierne nižšia ako v prvom experimente. SVM s lineárnym kernelom mal ale oproti predošlému experimentu vyššiu AUROC a hlavne specificity, ktorá má teraz pre túto metódu najväčšiu hodnotu, aj keď accuracy zostala podobná. Podarilo sa nám teda dokázať, že po zlogaritmovaní premennej, ktorá mala predtým exponenciálny rast, nám lineárny kernel na SVM dokáže lepšie fitnúť.
 
-V treťom experimente sme znovu predikovali status_oh, tentokrát na základe GDP a percentage expenditure. Tu nám vyšiel ako najlepšia metóda Random forest a SVM s lineárnym kernelom, s accuracy 85% a 84%. Na tento model sme skúsili aj hyperparameter tuning, s nádejou, že nám to model ešte zlepší. Accuracy sa naozaj zlepšila, aj keď len o 1%,  hodnota sensitivity stúpla z 89% na 97%, ale specificity klesla zo 63% na 35%. TO znamená, že nám značne vzrástla miera falošne negatívnych prípadov.
+V treťom experimente sme znovu predikovali status_oh, tentokrát na základe GDP a percentage expenditure. Tu nám vyšiel ako najlepšia metóda Random forest a SVM s lineárnym kernelom, s accuracy 85% a 84%. Na SVM-linear model sme skúsili aj hyperparameter tuning, s nádejou, že nám to model ešte zlepší. Accuracy sa naozaj zlepšila, aj keď len o 1%,  hodnota sensitivity stúpla z 89% na 97%, ale specificity klesla zo 63% na 35%. To znamená, že nám značne vzrástla miera falošne negatívnych prípadov.
 
 V poslednom experimente s kategorickou verziou predikovanej hodnoty nám ukázal, že oproti prvému experimentu inak vyhodnocoval výsledky ako náš prístup s ROC kryvkou a youden pointom, a teda accuracy vo všetkych modeloch stúpla. Tak isto stúpla sensitivity. Ale hodnoty pre specificity a AUROC vo všetkých modeloch klesla. To znamená, rovnako ako v predošlom experimente, že tieto modely viac predikuju falošne pozitívne prípady.
