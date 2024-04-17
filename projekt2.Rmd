@@ -1179,7 +1179,7 @@ data.frame(
 Parametre máme rovnaké ako v 1.experimente, porovnáme výsledky:
 LDA malo najnižšiu presnosť (0,8481), v 1. experimente malo najvyššiu. 
 SVM-linear má navyššiu presnosť (0,8741), v 1. experimente malo najnižšiu.
-Random Forrest má najvyššiu specificity (0,6136).
+Random Forrest má najvyššiu specificity (0,6363).
 Sensitivity, F1 je približne rovnaká pre všetky modely.
 
 
@@ -1189,8 +1189,10 @@ Testovali sme 5 (resp 6) rôznych modelov na troch rôznych kombináciach parame
 
 V prvom experimente, kde sme predikovali status_oh pomocou GDP a Schooling, nám ako najlepší model vyšiel Random Forest, a hneď za ním SVM s radiálnym kernelom, obidva s accuracy približne 85%. SVM-linear mal výrazne horšie výsledky pre specificity (najhoršie zo všetkých).
 
-V druhom experimente sme vytvorili modely na rovnakých premenných, ale GDP sme zlogaritmovali, s cieľom zlepšiť výsledky pre GLM s lineárnym kernelom. Tu mal najlepší výsledok znova Random Forrest a SVM s radiálnym kernelom, aj keď bola accuracy mierne nižšia ako v prvom experimente. SVM s lineárnym kernelom mal ale oproti predošlému experimentu vyššiu AUROC a hlavne specificity, ktorá má teraz pre túto metódu najväčšiu hodnotu, aj keď accuracy zostala podobná. Podarilo sa nám teda dokázať, že po zlogaritmovaní premennej, ktorá mala predtým exponenciálny rast, nám lineárny kernel na SVM dokáže lepšie fitnúť.
+V druhom experimente sme vytvorili modely na rovnakých premenných, ale GDP sme zlogaritmovali, s cieľom zlepšiť výsledky pre SVM s lineárnym kernelom. Tu mal najlepší výsledok znova Random Forrest a SVM s radiálnym kernelom, aj keď bola accuracy mierne nižšia ako v prvom experimente. SVM s lineárnym kernelom mal ale oproti predošlému experimentu vyššiu AUCROC a hlavne specificity, ktorá má teraz pre túto metódu najväčšiu hodnotu, aj keď accuracy zostala podobná. Podarilo sa nám teda dokázať, že po zlogaritmovaní premennej, ktorá mala predtým exponenciálny rast, nám lineárny kernel na SVM dokáže lepšie fitnúť.
 
 V treťom experimente sme znovu predikovali status_oh, tentokrát na základe GDP a percentage expenditure. Tu nám vyšiel ako najlepšia metóda Random forest a SVM s lineárnym kernelom, s accuracy 85% a 84%. Na SVM-linear model sme skúsili aj hyperparameter tuning, s nádejou, že nám to model ešte zlepší. Accuracy sa naozaj zlepšila, aj keď len o 1%,  hodnota sensitivity stúpla z 89% na 97%, ale specificity klesla zo 63% na 35%. To znamená, že nám značne vzrástla miera falošne negatívnych prípadov.
 
 V poslednom experimente s kategorickou verziou predikovanej hodnoty nám ukázal, že oproti prvému experimentu inak vyhodnocoval výsledky ako náš prístup s ROC kryvkou a youden pointom, a teda accuracy vo všetkych modeloch stúpla. Tak isto stúpla sensitivity. Ale hodnoty pre specificity a AUROC vo všetkých modeloch klesla. To znamená, rovnako ako v predošlom experimente, že tieto modely viac predikuju falošne pozitívne prípady.
+
+Random forrest bol stabilný a výkonný model. SVM s radiálnym kernelom bol tiež dobrý, dokázal sa lepšie adaptovať. Nárast sensitivity môže viesť k poklesu specificity. Zlogaritmovaním GDP sa zlepšujú výsledky SVM s lineárnym kernelom, to naznačuje, že lineárne modely môžu byť účinnejšie na zlogaritmovaných dátach, kedže sú lepšie normalizované.
