@@ -273,6 +273,7 @@ Podľa pairplotu z EDA vybraté prediktory **GDP a Schooling** by mali súvisie�
 ```{r}
 data %$% pairs( status_oh ~  GDP + Schooling)
 ```
+
 zlogaritmová GDP:
 ```{r}
 data %$% pairs( status_oh ~  log(GDP) + Schooling)
