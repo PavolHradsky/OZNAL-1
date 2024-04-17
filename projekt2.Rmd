@@ -267,16 +267,28 @@ test_data %>%
 Podľa korelácie z EDA vybraté prediktory **GDP a percentage expenditure** by mali súvisieť s **rozvojovým statusom krajiny**: 
 ```{r}
 data %$% pairs( status_oh ~  `percentage expenditure` + GDP)
+ggplot(data, aes(x = `percentage expenditure`, y = GDP, color = factor(status_oh))) +
+  geom_point() +
+  labs(title = "Pairplot of 'percentage expenditure' and 'GDP' with different colors for 'status_oh'",
+       x = "percentage expenditure", y = "GDP")
 ```
 
 Podľa pairplotu z EDA vybraté prediktory **GDP a Schooling** by mali súvisieť s **rozvojovým statusom krajiny**: 
 ```{r}
 data %$% pairs( status_oh ~  GDP + Schooling)
+ggplot(data, aes(x = GDP, y = Schooling, color = factor(status_oh))) +
+  geom_point() +
+  labs(title = "GDP' and 'Schooling' with different colors for 'status_oh'",
+       x = "GDP", y = "Schooling")
 ```
 
 zlogaritmová GDP:
 ```{r}
 data %$% pairs( status_oh ~  log(GDP) + Schooling)
+ggplot(data, aes(x = log(GDP), y = Schooling, color = factor(status_oh))) +
+  geom_point() +
+  labs(title = "log(GDP)' and 'Schooling' with different colors for 'status_oh'",
+       x = "log(GDP)", y = "Schooling")
 ```
 
 
